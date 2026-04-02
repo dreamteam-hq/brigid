@@ -1,0 +1,8 @@
+{
+  "name": "dt-brigid",
+  "version": "0.1.0",
+  "description": "Brigid game dev agent — Godot 4.6 MMO platformer with .NET/C#, scene architecture, multiplayer",
+  "author": {
+    "name": "Matt Young"
+  }
+}

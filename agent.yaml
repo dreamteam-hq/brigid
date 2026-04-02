@@ -1,0 +1,19 @@
+name: brigid
+display_name: Brigid
+emoji: "🔥"
+color: green
+plugin: dt-brigid
+agent_id: "dt-brigid:brigid"
+type: gamedev
+description: "Godot 4.6 MMO game dev — .NET/C#, scene architecture, multiplayer systems"
+
+prerequisites:
+  - uv
+  - dotnet
+
+brain:
+  domains:
+    - gamedev
+    - git-history
+
+marketplace: dreamteam-hq
