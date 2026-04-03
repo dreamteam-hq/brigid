@@ -80,9 +80,9 @@ Runtime mesh generation for terrain, VFX, and dynamic geometry.
 
 Techniques for maintaining framerate with large 3D scenes.
 
-- **Mesh Merging** — combine static meshes that share materials via `MeshInstance3D.MergeMeshes()`. Reduces draw calls at the cost of per-object culling.
+- **Mesh Merging** — combine static meshes that share materials via manual `ArrayMesh` merging or `RenderingServer` APIs. Reduces draw calls at the cost of per-object culling.
 - **MultiMeshInstance3D** — GPU-instanced rendering for repeated objects (grass, rocks, debris, particles). Set transforms per instance. Orders of magnitude faster than individual MeshInstance3D nodes.
 - **OccluderInstance3D** — define occluder shapes for occlusion culling. Objects behind occluders skip rendering. Use simple box/quad occluders on large walls and buildings.
 - **GPU Instancing** — enable on ShaderMaterial for custom instanced rendering. Use instance uniforms for per-instance variation (color, scale, animation offset).
-- **Visibility Culling** — the engine frustum-culls automatically. Assist it with `VisibilityNotifier3D` to also pause logic on off-screen entities.
+- **Visibility Culling** — the engine frustum-culls automatically. Assist it with `VisibleOnScreenNotifier3D` to also pause logic on off-screen entities.
 - For MMO entity counts: MultiMeshInstance3D for cosmetic props, aggressive LOD for player characters, server-driven interest management to limit visible entity count.

@@ -8,15 +8,15 @@ description: 3D sidescroller platformer mechanics in Godot 4.6 C# — CharacterB
 ## CharacterBody3D Movement
 
 - All movement through `Velocity` property + `MoveAndSlide()` in `_PhysicsProcess(double delta)`.
-- `IsOnFloor()`, `IsOnWall()`, `IsOnCeiling()` are only valid **after** `MoveAndSlide()` — never before.
-- Apply gravity each frame: `Velocity += new Vector3(0, gravity * (float)delta, 0)` (gravity is negative).
+- `IsOnFloor()`, `IsOnWall()`, `IsOnCeiling()` reflect the result of the most recent `MoveAndSlide()` — typically read at the start of the next `_PhysicsProcess` frame, before the current frame's `MoveAndSlide()`.
+- Apply gravity each frame: `velocityBeforePhysics.Y -= gravity * (float)delta` where `gravity` is a positive value (CrystalMagica default: `22f`).
 - Horizontal movement: set `Velocity.X` from input direction * speed.
-- **Sidescroller constraint**: clamp `Velocity.Z = 0` and `Position.Z = 0` every physics frame to lock the play plane.
+- **Sidescroller constraint**: if Z drift occurs, clamp with `Position = Position with { Z = 0f }` and `Velocity = Velocity with { Z = 0f }` each physics frame.
 - `UpDirection = Vector3.Up` (default) — required for `IsOnFloor()` to work.
 
 ## Jump Physics
 
-- On jump press while `IsOnFloor()`: `Velocity = Velocity with { Y = jumpVelocity }` (positive value).
+- On jump press while `IsOnFloor()`: `Velocity = Velocity with { Y = Velocity.Y + jumpVelocity }` (adds to current Y).
 - **Jump cut**: on jump release while `Velocity.Y > 0`, multiply `Velocity.Y` by `jumpCutFactor` (0.3-0.5) for variable height.
 - **Fall gravity multiplier**: when `Velocity.Y < 0`, apply `gravity * fallMultiplier` instead of base gravity for snappier descent.
 - **Max fall speed**: clamp `Velocity.Y` to `maxFallSpeed` (negative) to prevent terminal-velocity feel.
