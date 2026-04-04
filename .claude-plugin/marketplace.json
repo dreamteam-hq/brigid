@@ -1,0 +1,11 @@
+{
+  "name": "dreamteam-hq-brigid",
+  "owner": { "name": "Matt Young" },
+  "plugins": [
+    {
+      "name": "dt-brigid",
+      "source": ".",
+      "description": "Brigid game dev agent — Godot 4.6 MMO platformer with .NET/C#, scene architecture, multiplayer"
+    }
+  ]
+}
