@@ -130,14 +130,37 @@ signatures don't match the generator's expectations. Fix those first.
 // In MapHub.cs -- same file as existing RelayCharacterAction
 public async Task PerformAttack(AttackIntent intent, ConnectedUser user)
 {
-    // Server-authoritative identity (same pattern as RelayCharacterAction line 23)
-    intent.Position = user.Character.Position;
+    // Server-authoritative identity (same pattern as RelayCharacterAction line 23:
+    //   action.CharacterId = user.Character.Id)
     intent.AttackerId = user.Character.Id;
 
-    // Validation and registration happen in AttackService
+    // Server-authoritative position -- INTENTIONAL DIVERGENCE from RelayCharacterAction.
+    //
+    // RelayCharacterAction TRUSTS client position (line 21):
+    //   user.Character.Position = action.Position;   // server ACCEPTS client claim
+    //
+    // PerformAttack OVERWRITES with server-known position (anti-cheat):
+    //   intent.Position = user.Character.Position;   // server IGNORES client claim
+    //
+    // This ensures hitbox construction uses the server-known position, preventing
+    // teleport-attack cheats where a client claims to be next to an enemy while
+    // their server-known position is across the map.
+    intent.Position = user.Character.Position;
+
+    // Note: RegisterAttack also reads user.Character.Position directly for hitbox
+    // construction, making this overwrite defensive. The canonical source of truth
+    // for attack origin is RegisterAttack, not intent.Position.
     _attackService.RegisterAttack(intent, user);
 }
 ```
+
+**Position handling: relay vs combat** -- both paths apply server-authoritative identity
+(`CharacterId` / `AttackerId`), but they handle position oppositely. `RelayCharacterAction`
+stores the client-reported position as truth because movement is client-predicted and the
+server has no physics simulation to contradict it. `PerformAttack` overwrites with the
+server-known position because combat must be server-authoritative -- a cheating client
+could claim to be adjacent to an enemy while actually being across the map. See
+`references/integration-and-di.md` for the full comparison table.
 
 MapHub needs an `AttackService` dependency. Add it via primary constructor:
 ```csharp
@@ -204,7 +227,7 @@ is sufficient for large melee hitboxes.
 Keep hitboxes generous. Pixel-perfect collision in a networked game with 50-200ms RTT feels
 unfair to the attacker.
 
-For full `HitboxMath` implementation, read `references/attack-service-impl.md`.
+For full `HitboxMath` implementation, read `references/attack-service-core.md`.
 
 ---
 
@@ -263,7 +286,8 @@ wires the hosted service from the same instance. This is required so `AttackServ
 inject `EnemyControllerService` for the snapshot/damage methods.
 
 For full `AttackService` implementation, tick loop, validation, and broadcast helpers,
-read `references/attack-service-impl.md`.
+read `references/attack-service-core.md`. For DI registration, `EnemyControllerService` changes,
+`MapHub` changes, and client-side integration, read `references/integration-and-di.md`.
 
 ---
 
@@ -406,25 +430,41 @@ architectural change. For > 100 enemies in a zone, add spatial hashing to the br
 
 ## Implementation Checklist
 
+### Server -- Models and Interfaces
 1. Create `AttackType` enum and `AttackIntent` partial class in `CrystalMagica/Models/`
 2. Create `EnemyHealth` partial class in `CrystalMagica/Models/`
 3. Add `PerformAttack` to `ClientHubs/Server/IMapHub.cs`
 4. Add `EnemyHealthUpdated`, `EnemyDied` to `ClientHubs/Game/IMapHub.cs`
 5. Build solution -- verify source generators produce expected types
+
+### Server -- Services
 6. Create `ActiveAttack` in `CrystalMagica.Server/Services/`
 7. Add `EnemyState`, `GetEnemySnapshot()`, `ApplyDamage()` to `EnemyControllerService`
 8. Create `AttackService` with tick loop, registration, overlap, broadcast
 9. Update `MapHub` with `PerformAttack` implementation
 10. Update `Program.cs` DI registration (singleton + hosted service pattern)
-11. Add client-side `PerformAttack` call in `LocalPlayerCharacterVM`
-12. Test: single attack -> single enemy -> health update broadcast
+
+### Server -- Race Condition Guards
+11. **Dead enemy patrol guard (Race 4)**: add `if (state.Hp <= 0) continue;` in `EnemyControllerService` patrol loop. Without this, dead enemies continue patrolling and broadcasting movement after death -- a visible bug.
+12. **Idempotent death broadcast (Race 3)**: two players killing the same enemy in the same tick produces two `EnemyDied` broadcasts. The client `OnEnemyDied` handler must guard against double-removal (e.g., check `_enemyCache.Lookup(enemyId).HasValue` before removing). Without this, clients may throw `KeyNotFoundException`, play the death animation twice, or award double XP.
+
+### Client
+13. Add client-side `PerformAttack` call in `LocalPlayerCharacterVM`
+14. Implement `OnEnemyHealthUpdated` handler -- update enemy VM HP, trigger health bar animation
+15. Implement `OnEnemyDied` handler -- remove from `SourceCache`, play death animation (idempotent, see item 12)
+
+### Verification
+16. Test: single attack -> single enemy -> health update broadcast
+17. Test: kill enemy -> verify patrol stops (Race 4 guard)
+18. Test: two simultaneous kills -> verify client handles duplicate death gracefully (Race 3 guard)
 
 ---
 
 ## Reference Material
 
-- `references/attack-service-impl.md` -- full `AttackService`, `HitboxMath`, tick loop, validation, DI
-- `references/thread-safety.md` -- shared state analysis, snapshot pattern, damage locks, scaling
+- `references/attack-service-core.md` -- `AttackService` class, `HitboxMath`, tick loop, registration, validation, process loop, broadcast helpers
+- `references/integration-and-di.md` -- DI registration in `Program.cs`, `EnemyControllerService` changes (`EnemyState`, snapshot, damage, dead patrol guard), `MapHub` changes (position divergence), client-side integration (idempotent death handling)
+- `references/thread-safety.md` -- shared state analysis, snapshot pattern, damage locks, race conditions, scaling
 
 ## Cross-References
 
