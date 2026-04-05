@@ -6,22 +6,6 @@ description: >
   down-jump implementation, and 2.5D constraints. All C# / .NET 10.
   Triggers: collision, Area3D, hitbox, hurtbox, one-way platform, down jump,
   collision layer, collision mask, attack area, 2.5D.
-scope: consumer
-metadata:
-  category: reference
-  tags:
-    domain: [gamedev, godot]
-    depth: intermediate
-    pipeline: build
-provenance:
-  origin: authored
-  source: brigid-agent
-  imported_at: 2026-04-05
-  trust_level: vetted
-quality: production
-lifecycle:
-  status: active
-  created: 2026-04-05
 ---
 
 # Godot 4.6 3D Collision & Areas (C#)
@@ -159,7 +143,31 @@ if (hitbox.HasOverlappingAreas())
 }
 ```
 
-Overlap queries update once per physics frame. Call `ForceUpdateOverlaps()` if you need immediate results after moving a shape.
+**Timing**: `GetOverlappingBodies()` and `GetOverlappingAreas()` return results from the most recent physics frame. They do **not** update mid-frame -- if you reposition a shape and query immediately in the same frame, you get stale results.
+
+**There is no `ForceUpdateOverlaps()` on Area3D in Godot 4.6.** Unlike `RayCast3D.ForceRaycastUpdate()` and `ShapeCast3D.ForceShapecastUpdate()`, Area3D has no force-update method. If you need an immediate intersection test after repositioning (before the next physics frame), use a `PhysicsDirectSpaceState3D` query:
+
+```csharp
+// Immediate overlap query using PhysicsServer3D direct space state
+var spaceState = GetWorld3D().DirectSpaceState;
+var query = new PhysicsShapeQueryParameters3D
+{
+    Shape = hitboxShape,                  // the Shape3D resource
+    Transform = hitbox.GlobalTransform,   // current world transform
+    CollisionMask = hitbox.CollisionMask, // same mask as the Area3D
+    CollideWithAreas = true,              // detect Area3D nodes (hurtboxes)
+    CollideWithBodies = true,             // detect PhysicsBody3D nodes
+};
+
+var results = spaceState.IntersectShape(query);
+foreach (var result in results)
+{
+    var collider = result["collider"].As<Node3D>();
+    // Process immediate overlap
+}
+```
+
+For most gameplay patterns (hitboxes, hurtboxes, triggers), the per-physics-frame update cycle is sufficient. Reserve `PhysicsDirectSpaceState3D` queries for cases where you teleport a shape and must know the result before the next `_PhysicsProcess` call.
 
 ---
 
@@ -281,14 +289,16 @@ public void DisablePlatformCollision()
 
 ### Mask Configuration Matrix
 
-| Node | Layer (I am) | Mask (I detect) |
-|------|-------------|-----------------|
-| Player CharacterBody3D | 2 (Player) | 1 (Environment), 11 (OneWayPlatforms) |
-| Player Hurtbox (Area3D) | 3 (PlayerHurtbox) | 7 (EnemyHitbox) |
-| Player Hitbox (Area3D) | 4 (PlayerHitbox) | 6 (EnemyHurtbox) |
-| Enemy CharacterBody3D | 5 (Enemy) | 1 (Environment) |
-| Enemy Hurtbox (Area3D) | 6 (EnemyHurtbox) | 4 (PlayerHitbox), 8 (Projectiles) |
-| Enemy Hitbox (Area3D) | 7 (EnemyHitbox) | 3 (PlayerHurtbox) |
+This matrix shows the **target configuration** for the full combat system. See the "Status" column for what exists today vs what is planned.
+
+| Node | Layer (I am) | Mask (I detect) | Status |
+|------|-------------|-----------------|--------|
+| Player CharacterBody3D | 2 (Player) | 1 (Environment), 11 (OneWayPlatforms) | **Partial** -- Player.tscn sets layer=2, mask=1 (default). Layer 11 does not exist in project.godot yet. |
+| Player Hurtbox (Area3D) | 3 (PlayerHurtbox) | 7 (EnemyHitbox) | **Planned** -- layers 3, 7 defined in project.godot but hurtbox node not wired yet |
+| Player Hitbox (Area3D) | 4 (PlayerHitbox) | 6 (EnemyHurtbox) | **Planned** -- layers 4, 6 defined in project.godot but hitbox node not wired yet |
+| Enemy CharacterBody3D | 5 (Enemy) | 1 (Environment) | **Planned** -- layer 5 not in project.godot yet (Loop 3) |
+| Enemy Hurtbox (Area3D) | 6 (EnemyHurtbox) | 4 (PlayerHitbox), 8 (Projectiles) | **Planned** -- layers 6, 8 not in project.godot yet (Loop 3) |
+| Enemy Hitbox (Area3D) | 7 (EnemyHitbox) | 3 (PlayerHurtbox) | **Planned** -- layer 7 not in project.godot yet (Loop 3) |
 
 Hitboxes detect hurtboxes, not body layers. This keeps combat detection independent of physics movement.
 
@@ -311,6 +321,8 @@ World/Level/
 The player's CharacterBody3D mask includes layer 11 by default. To drop through, temporarily remove layer 11 from the player's mask.
 
 ### Down-Jump Implementation (Loop 3)
+
+> **Prerequisite**: The `move_down` input action does **not** exist in `project.godot` yet. The current input map defines: `move_left`, `move_right`, `jump`, `run`, `quit`. Before using this pattern, add `move_down` to the input map (e.g., bound to S / Down arrow / gamepad D-pad down). Without it, `Input.IsActionJustPressed("move_down")` silently returns `false` and the drop-through never triggers.
 
 ```csharp
 public partial class PlayerNode : CharacterBody3D
@@ -458,8 +470,11 @@ SetCollisionMaskValue(PhysicsLayers.OneWayPlatforms, false);
 
 ## Cross-References
 
+This skill extends the collision layer strategy and body type selection covered in `godot-physics-3d`. Load that skill first for foundational 3D physics concepts; load this skill when the task involves Area3D overlap detection, hitbox/hurtbox patterns, or one-way platforms.
+
 | Skill | When to Load |
 |-------|-------------|
+| `godot-physics-3d` | Collision layer strategy, CharacterBody3D movement physics, body type selection |
 | `gamedev-3d-platformer` | Movement physics, coyote time, input buffering, state machine |
 | `gamedev-godot` | Scene architecture, C# scripting, MCP server workflow |
 | `gamedev-3d-ai` | Enemy patrol, pathfinding, behavior trees |
