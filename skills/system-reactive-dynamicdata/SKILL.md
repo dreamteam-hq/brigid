@@ -352,51 +352,18 @@ All Rx subscriptions fire on the main thread. The architecture guarantees this:
 
 ### Disposal Strategies
 
+The codebase currently uses `_ =` discard universally -- this is safe when subscriptions live for the node's full lifetime.
+
 | Scenario | Strategy |
 |----------|----------|
 | Subscription lives for node lifetime | `_ =` discard -- GC-safe when source completes |
 | Subscription must be cut early | Store `IDisposable`, call `.Dispose()` in `_ExitTree()` |
-| Multiple subscriptions per node | `CompositeDisposable` -- dispose all at once |
+| Multiple subscriptions per node | **RECOMMENDED:** `CompositeDisposable` -- dispose all at once |
 | SourceCache pipeline | `_ = cache.Connect().Bind(...).Subscribe()` -- lives for VM lifetime |
 
-Explicit disposal with `CompositeDisposable`:
-
-```csharp
-private readonly CompositeDisposable _subscriptions = new();
-
-public void Bind(RemoteCharacterVM viewModel)
-{
-    viewModel.Position
-        .Subscribe(x => Position = x.ToGodot3D())
-        .DisposeWith(_subscriptions);
-
-    viewModel.Updates
-        .Subscribe(HandleAction)
-        .DisposeWith(_subscriptions);
-}
-
-public override void _ExitTree() => _subscriptions.Dispose();
-```
-
-### Error Handling in Pipelines
-
-An unhandled `OnError` terminates the subscription permanently. Protect long-lived pipelines:
-
-```csharp
-// Catch with fallback
-viewModel.Position
-    .Catch<Vector2, Exception>(
-        ex => Observable.Return(Vector2.Zero))
-    .Subscribe(x => Position = x.ToGodot3D());
-
-// Retry on error
-connectionStatus
-    .Retry(3)
-    .Subscribe(
-        onNext: status => UpdateUI(status),
-        onError: ex => GD.PrintErr(
-            $"Failed after retries: {ex.Message}"));
-```
+> **RECOMMENDED patterns** for explicit disposal (`CompositeDisposable`, `DisposeWith`,
+> `_ExitTree` teardown), Godot lifecycle integration, error handling (`Catch`, `Retry`),
+> and testing Rx code: see [references/advanced-patterns.md](references/advanced-patterns.md).
 
 ## Anti-Patterns
 
@@ -465,38 +432,7 @@ Always pass an `onError` handler to `Subscribe`. Without it, an error silently k
 
 ## Testing Rx Code
 
-Use `Microsoft.Reactive.Testing.TestScheduler` for deterministic time. Subscribe synchronously and assert immediately -- `StartWith` and `Subject.OnNext` emit inline.
-
-```csharp
-[TestMethod]
-public void Position_StartsWithSpawnPosition()
-{
-    var data = new CharacterData
-        { Position = new Vector2(10, 20) };
-    var vm = new RemoteCharacterVM(data);
-
-    Vector2? received = null;
-    vm.Position.Subscribe(p => received = p);
-
-    Assert.AreEqual(new Vector2(10, 20), received);
-}
-```
-
-```csharp
-[TestMethod]
-public void Position_UpdatesOnAction()
-{
-    var data = new CharacterData { Position = Vector2.Zero };
-    var vm = new RemoteCharacterVM(data);
-
-    var positions = new List<Vector2>();
-    vm.Position.Subscribe(p => positions.Add(p));
-
-    vm.Updates.OnNext(
-        new CharacterAction { Position = new Vector2(5, 5) });
-
-    // StartWith + one action = 2 emissions
-    Assert.AreEqual(2, positions.Count);
-    Assert.AreEqual(new Vector2(5, 5), positions[1]);
-}
-```
+> **Recommended approach** -- no Rx tests currently exist in CrystalMagica.
+> Use `Microsoft.Reactive.Testing.TestScheduler` for deterministic time. Subscribe
+> synchronously and assert immediately -- `StartWith` and `Subject.OnNext` emit inline.
+> For examples, see [references/advanced-patterns.md](references/advanced-patterns.md).
