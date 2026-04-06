@@ -3,6 +3,7 @@ name: brain-status
 description: Show Brigid brain health — node counts, table sizes, schema status
 allowed-tools:
   - Bash
+  - Read
 ---
 
 Show Brigid's brain health by querying both graph and relational stores.
