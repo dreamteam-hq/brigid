@@ -7,7 +7,18 @@ description: >
   mentions "floating point", "float precision", "determinism", "fixed point",
   "large world", "origin rebasing", "physics stability", "epsilon comparison",
   "PRNG", "numerical precision", "cross-platform lockstep", or "FMA variance".
-  Triggers: floating point, float precision, determinism, fixed point arithmetic, large world, origin rebasing, physics stability, epsilon comparison, PRNG, numerical precision.
+triggers:
+  - floating point
+  - float precision
+  - determinism
+  - fixed point arithmetic
+  - large world
+  - origin rebasing
+  - physics stability
+  - epsilon comparison
+  - PRNG
+  - numerical precision
+version: "1.0.0"
 ---
 
 # Numerical Pitfalls

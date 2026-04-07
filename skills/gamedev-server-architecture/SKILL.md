@@ -8,6 +8,17 @@ description: >
   with .NET, or when the user mentions "game server", "headless server",
   "tick rate", "SignalR", "Kestrel game server", "UDP socket", "connection
   pooling", or "server-authoritative".
+triggers:
+  - game server
+  - headless server
+  - tick rate
+  - SignalR
+  - Kestrel game server
+  - UDP socket
+  - connection pooling
+  - server-authoritative
+  - TCP socket
+version: "1.0.0"
 ---
 
 # C# Game Server Architecture

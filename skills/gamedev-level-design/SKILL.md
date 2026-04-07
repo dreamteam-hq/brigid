@@ -1,6 +1,17 @@
 ---
 name: gamedev-level-design
-description: "2D level design patterns — Metroidvania structure, difficulty curves, tutorial design, data-driven content, Godot MCP workflows" Triggers: level design, Metroidvania, difficulty curve, tutorial design, secret areas, ability gating, map connectivity, checkpoint placement, data-driven content.
+description: "2D level design patterns — Metroidvania structure, difficulty curves, tutorial design, data-driven content, Godot MCP workflows"
+triggers:
+  - level design
+  - Metroidvania
+  - difficulty curve
+  - tutorial design
+  - secret areas
+  - ability gating
+  - map connectivity
+  - checkpoint placement
+  - data-driven content
+version: "1.0.0"
 ---
 
 # 2D Level Design Patterns

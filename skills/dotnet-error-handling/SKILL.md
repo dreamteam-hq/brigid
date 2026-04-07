@@ -8,6 +8,17 @@ description: >
   API error contracts, or when the user mentions "error handling", "Result pattern",
   "ProblemDetails", "exception", "validation", "FluentValidation", "error response",
   "global exception handler", or "RFC 9457".
+triggers:
+  - error handling
+  - Result pattern
+  - ProblemDetails
+  - exception
+  - validation
+  - FluentValidation
+  - error response
+  - global exception handler
+  - RFC 9457
+version: "1.0.0"
 ---
 
 # Error Handling

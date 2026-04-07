@@ -1,6 +1,17 @@
 ---
 name: dotnet-spectre-console
 description: Covers Spectre.Console markup escaping, IRenderable namespace, CommandApp Execute signature, live display initialization, and Layout structure. Load when building CLI output, TUI dashboards, or Spectre.Console.Cli command definitions.
+triggers:
+  - Spectre.Console
+  - CLI output
+  - TUI dashboard
+  - CommandApp
+  - IRenderable
+  - markup escaping
+  - Live display
+  - Layout
+  - AnsiConsole
+version: "1.0.0"
 ---
 
 # Spectre.Console Patterns

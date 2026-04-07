@@ -7,6 +7,18 @@ description: >
   when the user mentions "game economy", "virtual currency", "sink and faucet",
   "inflation", "auction house", "loot table", "reward schedule", "RMT",
   "gold seller", or "player trading".
+triggers:
+  - game economy
+  - virtual currency
+  - sink and faucet
+  - inflation
+  - auction house
+  - loot table
+  - reward schedule
+  - RMT
+  - player trading
+  - gold seller
+version: "1.0.0"
 ---
 
 # Virtual Economy Design

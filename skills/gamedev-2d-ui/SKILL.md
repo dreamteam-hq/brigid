@@ -8,6 +8,19 @@ description: >
   "game menu", "pause menu", "settings menu", "key rebinding", "multiplayer UI", "nameplates",
   "party frames", "trade window", "lobby browser", "Godot Control", "CanvasLayer",
   "GridContainer", "RichTextLabel", "BBCode", or "tooltip".
+triggers:
+  - game UI
+  - HUD
+  - health bar
+  - inventory
+  - dialog system
+  - damage numbers
+  - floating text
+  - game menu
+  - CanvasLayer
+  - Godot Control
+  - tooltip
+version: "1.0.0"
 ---
 
 # Game UI/HUD Patterns (Godot 4)

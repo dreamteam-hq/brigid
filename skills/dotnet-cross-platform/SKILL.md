@@ -1,6 +1,17 @@
 ---
 name: dotnet-cross-platform
 description: Guides cross-platform .NET development by preferring framework APIs over shell commands and isolating OS-specific code in a single helper class. Load when writing code that must run on both macOS and Windows.
+triggers:
+  - cross-platform
+  - cross platform
+  - macOS Windows
+  - platform specific
+  - shelling out
+  - Process.GetProcesses
+  - IPGlobalProperties
+  - OS specific code
+  - portable code
+version: "1.0.0"
 ---
 
 # Cross-Platform Patterns

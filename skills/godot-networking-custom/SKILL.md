@@ -10,6 +10,7 @@ triggers:
   - client server
   - action relay
 category: gamedev
+version: "1.0.0"
 ---
 
 # Custom Networking for Godot 4.6 C# (CrystalMagica Pattern)

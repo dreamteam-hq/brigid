@@ -10,6 +10,7 @@ triggers:
   - MMO networking
   - server authority
 category: gamedev
+version: "1.0.0"
 ---
 
 # MMO Action Relay Architecture

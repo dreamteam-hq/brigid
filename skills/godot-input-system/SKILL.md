@@ -10,6 +10,7 @@ triggers:
   - gamepad input
   - input buffer
 category: gamedev
+version: "1.0.0"
 ---
 
 # Godot 4.6 C# Input System Reference

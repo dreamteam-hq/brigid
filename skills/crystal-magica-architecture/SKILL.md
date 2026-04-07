@@ -8,6 +8,7 @@ triggers:
   - solution structure
   - game architecture
 category: gamedev
+version: "1.0.0"
 ---
 
 # CrystalMagica Architecture Reference
@@ -59,11 +60,14 @@ Three companion analyzers enforce conventions: `ClientHubInterfaceMustInheritICl
 
 | Type | Location | Purpose |
 |---|---|---|
-| `CharacterData` | Shared/Models | `Id`, `Color`, `Position`, `Velocity`, `Direction` |
+| `CharacterData` | Shared/Models | `Id`, `EntityType`, `Color`, `Position`, `Velocity`, `Direction`, `Health`, `MaxHealth` |
 | `CharacterAction` | Shared/Models | Base action with `Action`, `CharacterId`, `Position`; pooled via `Rent`/`Remit` |
 | `MoveBegin` | Shared/Models | Extends `CharacterAction` with `FaceDirection`, `IsRunning` |
+| `AttackAction` | Shared/Models | Extends `CharacterAction` with `FaceDirection Direction`; attack intent sent client→server |
+| `EnemyDamaged` | Shared/Models | `Guid EnemyId`, `int NewHealth`, `int Damage`; health update sent server→client |
 | `FaceDirection` | Shared/Models | Enum: `Left`, `Right` |
 | `CharacterState` | Shared/Models | Enum: `Idle`, `Walking`, `Jumping`, `Falling` |
+| `EntityType` | Shared/Models | Enum: `Player`, `Enemy` |
 | `JoinMapResponse` | Shared/Models | `YourCharacter` + `ExistingCharacters` list |
 | `Color` | Shared/Models | `R`, `G`, `B` bytes (not Godot.Color) |
 | `ConnectedUser` | Server/WebSockets | `SessionId`, `Character`, `GameClient`, outgoing `Channel<Rented<IWriteBuffer>>` |
@@ -74,9 +78,31 @@ Three companion analyzers enforce conventions: `ClientHubInterfaceMustInheritICl
 - **WebSocket endpoint** at `/ws`. Raw binary frames, not SignalR.
 - `SocketHandler.ProcessSocket` accepts the socket, creates a `ConnectedUser` via `ConnectionService`, runs parallel `ReceiveLoop` / `SendLoop` tasks.
 - `ReceiveLoop` parses message type from first byte(s), deserializes payload via `ReadBuffer`, calls `IMessageRouter.RouteMessage`.
-- `MapHub` is the only hub. Owns `ConcurrentDictionary<Guid, ConnectedUser> ConnectedUsers`. `JoinRequest` assigns a `CharacterData` with random color, relays spawn to others. `RelayCharacterAction` overwrites `CharacterId` (server-authoritative), relays to all other users.
+- `MapHub` is the only hub. Owns `ConcurrentDictionary<Guid, ConnectedUser> ConnectedUsers`. `JoinRequest` assigns a `CharacterData` with random color, relays spawn to others. `RelayCharacterAction` overwrites `CharacterId` (server-authoritative), relays to all other users. `PerformAttack` receives attack intents from clients, validates, and delegates to `AttackService`.
 - `ConnectionService` creates/tears down connections. On disconnect, removes from `MapHub.ConnectedUsers` and broadcasts `CharacterDespawned`.
-- No game logic on the server — pure relay with authoritative identity.
+- **Server is stateful and authoritative for combat (Loop 5+).** The server transitioned from pure relay to authoritative game logic at Loop 5. Clients send intents ("I attacked at position P facing direction D"); the server decides what got hit.
+
+### Combat services (added Loop 5)
+
+- **`AttackService`** — hitbox computation (rectangular region in front of attacker based on `FaceDirection`), collision checks against all enemy positions in `EnemyRegistry`, damage application (1 damage per hit), per-attack dedup (same enemy hit at most once per attack activation), continuous collision checking for the 1s attack duration so enemies walking into an active hitbox are also hit.
+- **`EnemyRegistry`** — singleton `ConcurrentDictionary<Guid, CharacterData>` shared between `EnemyControllerService` and `AttackService`. Provides a consistent view of enemy positions to both services.
+- **`EnemyControllerService`** — `BackgroundService`. Spawns enemies with health (`Health = 5`, `MaxHealth = 5`). Patrol loop (MoveBegin right → delay → update position → MoveBegin left → delay). Each enemy has its own `CancellationTokenSource` so it can be cancelled individually on death (Loop 6).
+
+### Hub methods added in Loop 5
+
+| Method | Direction | Purpose |
+|---|---|---|
+| `MapHub.PerformAttack(AttackAction)` | Client → Server | Client sends attack intent; server resolves damage |
+| `EnemyHealthUpdated(EnemyDamaged)` | Server → Client | Broadcasts new enemy health after damage is applied |
+
+### Models added in Loop 5
+
+| Type | Fields | Purpose |
+|---|---|---|
+| `AttackAction` | extends `CharacterAction`, adds `FaceDirection Direction` | Wire format for attack intent (client→server) |
+| `EnemyDamaged` | `Guid EnemyId`, `int NewHealth`, `int Damage` | Wire format for health update notification (server→client) |
+
+`AttackService` also maintains an internal list of active attacks for the 1s duration window. Each entry tracks attacker position, facing direction, start time, and the set of already-hit enemy IDs (for per-attack dedup). These are internal implementation details, not shared wire types.
 
 ## Constraints
 

@@ -1,6 +1,18 @@
 ---
 name: gamedev-blender
 description: Blender 3D asset creation and Godot import pipeline. Covers Blender MCP server usage, AI mesh generation (Hyper3D Rodin, Hunyuan3D), asset marketplaces (PolyHaven, Sketchfab), PBR materials, UV mapping, and glTF export to Godot. Load for any 3D asset work.
+triggers:
+  - Blender
+  - 3D asset
+  - UV mapping
+  - PBR material
+  - glTF export
+  - PolyHaven
+  - Sketchfab
+  - Hyper3D
+  - mesh generation
+  - Blender MCP
+version: "1.0.0"
 ---
 
 # Blender Asset Pipeline

@@ -7,6 +7,18 @@ description: >
   or when the user mentions "Serilog", "logging", "structured log", "OpenTelemetry",
   "traces", "metrics", "health check", "correlation ID", "observability",
   "telemetry", "log enrichment", or "ILogger".
+triggers:
+  - Serilog
+  - logging
+  - structured log
+  - OpenTelemetry
+  - traces
+  - metrics
+  - health check
+  - correlation ID
+  - observability
+  - ILogger
+version: "1.0.0"
 ---
 
 # Logging & Observability

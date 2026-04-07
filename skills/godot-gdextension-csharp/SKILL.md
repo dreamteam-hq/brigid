@@ -11,6 +11,7 @@ triggers:
   - managed native
   - telemetry_abi
 category: gamedev
+version: "1.0.0"
 ---
 
 # GDExtension C++ <-> C# Interop — ObservableGodot

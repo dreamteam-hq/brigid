@@ -1,6 +1,16 @@
 ---
 name: dotnet-scripts
 description: Covers patterns and gotchas for .NET script files with shebang headers, including package references, the --help interception limitation, and interactive console guards. Load when authoring or modifying scripts in the scripts/ directory.
+triggers:
+  - dotnet script
+  - shebang
+  - .cs script
+  - script file
+  - scripts directory
+  - package references script
+  - interactive console
+  - dotnet run
+version: "1.0.0"
 ---
 
 # .NET Script Files (dotnet script.cs)

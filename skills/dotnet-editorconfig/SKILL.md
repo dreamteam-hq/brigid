@@ -14,6 +14,17 @@ metadata:
     pipeline: source
 
 scope: consumer
+triggers:
+  - editorconfig
+  - C# linting
+  - code style
+  - naming conventions
+  - dotnet diagnostics
+  - CA rules
+  - IDE rules
+  - diagnostic severity
+  - .editorconfig
+version: "1.0.0"
 ---
 
 # dotnet-editorconfig

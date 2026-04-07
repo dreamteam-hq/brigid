@@ -8,6 +8,17 @@ description: >
   build properties, or when the user mentions "solution structure", ".slnx",
   "Directory.Build.props", "central package management", "Directory.Packages.props",
   "global usings", ".editorconfig", "project layout", or "naming conventions".
+triggers:
+  - solution structure
+  - .slnx
+  - Directory.Build.props
+  - central package management
+  - Directory.Packages.props
+  - global usings
+  - project layout
+  - naming conventions
+  - dotnet solution
+version: "1.0.0"
 ---
 
 # Project Structure

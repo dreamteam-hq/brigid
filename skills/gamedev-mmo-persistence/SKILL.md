@@ -10,6 +10,18 @@ description: >
   database", "game database schema", "player inventory", "guild system", "game
   chat", "leaderboard", "MMO persistence", "game account system", "world state",
   or "game data migration".
+triggers:
+  - MMO database
+  - game database schema
+  - player inventory
+  - guild system
+  - game chat
+  - leaderboard
+  - MMO persistence
+  - game account system
+  - world state
+  - game data migration
+version: "1.0.0"
 ---
 
 # MMO Persistence Layer

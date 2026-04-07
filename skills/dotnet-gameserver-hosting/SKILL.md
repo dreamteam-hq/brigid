@@ -10,6 +10,7 @@ triggers:
   - tick loop
   - graceful shutdown
 category: dotnet
+version: "1.0.0"
 ---
 
 # .NET Game Server Hosting

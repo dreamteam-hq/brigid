@@ -8,6 +8,18 @@ description: >
   test coverage, or when the user mentions "test", "xUnit", "WebApplicationFactory",
   "Testcontainers", "integration test", "unit test", "bUnit", "snapshot test",
   "Verify", "test coverage", "AAA pattern", "WireMock", or "FakeTimeProvider".
+triggers:
+  - test
+  - xUnit
+  - WebApplicationFactory
+  - Testcontainers
+  - integration test
+  - unit test
+  - snapshot test
+  - Verify
+  - AAA pattern
+  - FakeTimeProvider
+version: "1.0.0"
 ---
 
 # Testing (.NET 10)

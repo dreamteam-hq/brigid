@@ -8,6 +8,7 @@ triggers:
   - packet capture
   - RPC capture
 category: gamedev
+version: "1.0.0"
 ---
 
 # ObservableGodot Architecture

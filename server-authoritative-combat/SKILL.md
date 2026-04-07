@@ -22,6 +22,7 @@ triggers:
   - knockback
   - dodge
 category: gamedev
+version: "0.2.0"
 ---
 
 # Server-Authoritative Combat

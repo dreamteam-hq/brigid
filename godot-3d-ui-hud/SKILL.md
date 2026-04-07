@@ -19,6 +19,7 @@ triggers:
   - enemy health
   - boss health
 category: gamedev
+version: "1.0.0"
 ---
 
 # 3D UI & HUD Elements — Godot 4.6 C#

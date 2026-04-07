@@ -5,6 +5,17 @@ description: >
   Load when implementing custom analyzers, code fixes, or refactoring actions, reviewing
   analyzer code, or when the user mentions "DiagnosticAnalyzer", "CodeFixProvider",
   "CodeRefactoringProvider", "analyzer testing", ".editorconfig severity", or "diagnostic descriptor".
+triggers:
+  - DiagnosticAnalyzer
+  - CodeFixProvider
+  - CodeRefactoringProvider
+  - analyzer testing
+  - diagnostic descriptor
+  - roslyn analyzer
+  - code fix
+  - suppress diagnostic
+  - analyzer NuGet
+version: "1.0.0"
 ---
 
 # Roslyn Analyzers (.NET 10)

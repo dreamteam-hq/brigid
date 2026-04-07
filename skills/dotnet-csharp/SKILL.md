@@ -8,6 +8,18 @@ description: >
   modernization, using "modern C#", "C# 14", "primary constructor", "collection
   expression", "records", "pattern matching", "span", "field keyword", or
   "extension members". Always loaded as the baseline for all agents.
+triggers:
+  - modern C#
+  - C# 14
+  - primary constructor
+  - collection expression
+  - records
+  - pattern matching
+  - span
+  - field keyword
+  - extension members
+  - .NET 10
+version: "1.0.0"
 ---
 
 # Modern C# (C# 14 / .NET 10)

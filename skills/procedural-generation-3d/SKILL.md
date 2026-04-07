@@ -1,6 +1,18 @@
 ---
 name: procedural-generation-3d
 description: Procedural generation for 3D games — terrain, level layout, loot tables, WFC in 3D, chunk streaming, biome systems, and multiplayer seed synchronization
+triggers:
+  - procedural generation
+  - terrain generation
+  - WFC
+  - wave function collapse
+  - chunk streaming
+  - biome system
+  - loot tables
+  - noise map
+  - FastNoiseLite
+  - seed synchronization
+version: "1.0.0"
 ---
 
 # Procedural Content Generation for 3D Games

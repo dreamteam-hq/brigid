@@ -1,6 +1,17 @@
 ---
 name: gamedev-3d-ai
 description: Enemy AI for 3D MMO platformers — patrol loops, server-controlled entities, BackgroundService AI, state machines, aggro, boss patterns, and multiplayer authority
+triggers:
+  - enemy AI
+  - patrol loop
+  - state machine
+  - aggro
+  - boss pattern
+  - EnemyControllerService
+  - AI behavior
+  - NPC movement
+  - server-controlled AI
+version: "1.0.0"
 ---
 
 # Enemy AI Patterns for 3D MMO Platformers
@@ -84,6 +95,8 @@ All AI decisions are made server-side. Clients are pure renderers for enemy enti
 
 ## NavigationServer3D
 
+CrystalMagica uses **3D physics and 3D navigation** — CharacterBody3D, Vector3, 3D collision layers. The sidescroller feel (2.5D) is a gameplay constraint, not an engine constraint. NavigationServer3D is the correct pathfinding system.
+
 Godot's built-in server-side pathfinding for 3D environments:
 
 - **NavigationRegion3D**: bakes a navigation mesh from level geometry at edit time or runtime
@@ -91,3 +104,28 @@ Godot's built-in server-side pathfinding for 3D environments:
 - **Current approach**: waypoint-based approximation — enemies follow predefined points, no runtime pathfinding cost
 - **Future approach**: headless Godot instance on the server runs `NavigationServer3D` for real pathfinding without rendering overhead
 - **Considerations**: navmesh must account for enemy size (agent radius), jumping gaps (navigation links), and dynamic obstacles
+
+Godot 4.6 API (not deprecated 4.0 patterns):
+- `NavigationServer3D.map_create()` / `NavigationServer3D.map_set_active()` for runtime nav map management
+- `NavigationServer3D.agent_create()` with `NavigationAgent3D` for avoidance
+- Avoid the removed Godot 3.x `Navigation` node — use `NavigationRegion3D` exclusively
+
+## 2.5D AI Considerations
+
+CrystalMagica is a sidescroller rendered in 3D space. Enemy AI must respect this constraint:
+
+- **Constrain Z axis movement**: patrol waypoints and chase targets should stay on the level's Z plane. Clamp or project enemy Z position to the lane's Z coordinate each tick.
+- **Aggro radius as 2D circle**: compute aggro/leash checks using only X and Y distance (`Vector3` with Z ignored, or project to `Vector2`). A full 3D sphere check would incorrectly include enemies/players on different Z layers (e.g., background lanes).
+- **Jump AI**: vertical (Y-axis) movement for jumping enemies uses 3D physics (`CharacterBody3D.Velocity.Y`), not 2D. Apply gravity as a negative Y force each tick.
+- **NavMesh baking**: bake nav meshes as thin slabs on the lane Z plane. This prevents the 3D navmesh from routing enemies through Z depth when it shouldn't.
+- **Lane-switching enemies**: if future design adds Z-depth lane changes, those transitions are explicit state machine transitions (`ChangeLane` action), not free 3D movement.
+
+## CrystalMagica: EnemyControllerService Integration
+
+The `EnemyControllerService` (inherits `BackgroundService`) is the concrete implementation of all patterns above:
+
+- **Patrol cycles**: each enemy instance in the service has a waypoint list in 3D space (X varies, Y at platform height, Z fixed to lane). The service cycles through waypoints and emits `MoveBegin` / `Stop` `CharacterAction` messages.
+- **Spawn/despawn**: server-driven. The service creates enemy state entries on zone load, removes them on zone unload or death. Clients receive `EntitySpawn` / `EntityDespawn` relay messages and instantiate/free scene nodes accordingly.
+- **Server-authoritative positions**: the service owns `Vector3 AuthoritativePosition` per enemy. Clients never write to this — they interpolate their rendering position toward the broadcast value.
+- **Action relay**: enemies share the same `CharacterAction` relay pipeline as players. No enemy-specific protocol needed.
+- **MMO context**: in a multi-zone MMO, one `EnemyControllerService` per zone. The zone service lifecycle matches zone load/unload, keeping memory bounded.

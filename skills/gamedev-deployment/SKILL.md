@@ -9,7 +9,18 @@ description: >
   "Steamworks", "game CI/CD", "game build pipeline", "game patching", "live ops",
   "game analytics", "Godot export", "export presets", "delta patching",
   "version stamping", or "season system".
-  Triggers: game export, game deployment, Steam integration, Steamworks, game CI/CD, game build pipeline, game patching, live ops, game analytics, Godot export.
+triggers:
+  - game export
+  - game deployment
+  - Steam integration
+  - Steamworks
+  - game CI/CD
+  - game build pipeline
+  - game patching
+  - live ops
+  - game analytics
+  - Godot export
+version: "1.0.0"
 ---
 
 # Game Deployment and Live Operations

@@ -1,6 +1,17 @@
 ---
 name: gamedev-multiplayer
 description: Multiplayer game networking patterns — architecture models, state synchronization, lag compensation, matchmaking, lobby systems, and Godot 4 multiplayer API. Load when designing or implementing networked multiplayer features.
+triggers:
+  - multiplayer
+  - netcode
+  - state synchronization
+  - lag compensation
+  - matchmaking
+  - lobby system
+  - Godot multiplayer API
+  - client prediction
+  - server reconciliation
+version: "1.0.0"
 ---
 
 # Multiplayer Game Networking
@@ -149,13 +160,15 @@ Example: 16 players, 64 bytes/entity, 20 ticks/sec
 
 The client immediately applies its own input locally without waiting for server confirmation.
 
-```gdscript
-# Client predicts own movement immediately
-func _physics_process(delta):
-    var input = gather_input()
-    save_input_to_buffer(input, current_tick)
-    apply_movement(input, delta)  # predict locally
-    send_input_to_server(input, current_tick)
+```csharp
+// Client predicts own movement immediately
+public override void _PhysicsProcess(double delta)
+{
+    var input = GatherInput();
+    SaveInputToBuffer(input, _currentTick);
+    ApplyMovement(input, delta);  // predict locally
+    SendInputToServer(input, _currentTick);
+}
 ```
 
 - Movement feels instant to the player
@@ -166,18 +179,24 @@ func _physics_process(delta):
 
 When the server corrects the client, rewind to the corrected state and replay all unacknowledged inputs.
 
-```gdscript
-func on_server_state_received(server_state, server_tick):
-    # Compare server state to what we predicted at that tick
-    var predicted = get_predicted_state(server_tick)
-    if not states_match(predicted, server_state):
-        # Snap to server state
-        position = server_state.position
-        velocity = server_state.velocity
-        # Replay all inputs from server_tick+1 to current_tick
-        for tick in range(server_tick + 1, current_tick + 1):
-            var buffered_input = get_buffered_input(tick)
-            apply_movement(buffered_input, tick_delta)
+```csharp
+private void OnServerStateReceived(ServerState serverState, int serverTick)
+{
+    // Compare server state to what we predicted at that tick
+    var predicted = GetPredictedState(serverTick);
+    if(!StatesMatch(predicted, serverState))
+    {
+        // Snap to server state
+        Position = serverState.Position;
+        _velocity = serverState.Velocity;
+        // Replay all inputs from serverTick+1 to currentTick
+        for(var tick = serverTick + 1; tick <= _currentTick; tick++)
+        {
+            var bufferedInput = GetBufferedInput(tick);
+            ApplyMovement(bufferedInput, _tickDelta);
+        }
+    }
+}
 ```
 
 - Keep a circular buffer of recent inputs (128-256 ticks)
@@ -188,15 +207,17 @@ func on_server_state_received(server_state, server_tick):
 
 Render other players (and server-authoritative entities) between received snapshots rather than at their latest known position.
 
-```gdscript
-# Interpolate remote players between two server snapshots
-func interpolate_remote_entity(entity, render_time):
-    var t0 = entity.snapshot_buffer[-2]  # older snapshot
-    var t1 = entity.snapshot_buffer[-1]  # newer snapshot
-    var alpha = (render_time - t0.time) / (t1.time - t0.time)
-    alpha = clamp(alpha, 0.0, 1.0)
-    entity.visual_position = t0.position.lerp(t1.position, alpha)
-    entity.visual_rotation = t0.rotation.slerp(t1.rotation, alpha)
+```csharp
+// Interpolate remote players between two server snapshots
+private void InterpolateRemoteEntity(RemoteEntity entity, double renderTime)
+{
+    var t0 = entity.SnapshotBuffer[^2];  // older snapshot
+    var t1 = entity.SnapshotBuffer[^1];  // newer snapshot
+    var alpha = (float)((renderTime - t0.Time) / (t1.Time - t0.Time));
+    alpha = Mathf.Clamp(alpha, 0f, 1f);
+    entity.VisualPosition = t0.Position.Lerp(t1.Position, alpha);
+    entity.VisualRotation = Mathf.LerpAngle(t0.Rotation, t1.Rotation, alpha);
+}
 ```
 
 - Remote entities render in the "past" by one interpolation buffer period
@@ -267,52 +288,64 @@ If visual state changed: correction is visible but brief
 
 ### Setting Up a Server/Client
 
-```gdscript
-# Server
-func start_server(port: int = 9999, max_clients: int = 16):
-    var peer = ENetMultiplayerPeer.new()
-    var error = peer.create_server(port, max_clients)
-    if error != OK:
-        push_error("Failed to create server: %s" % error)
-        return
-    multiplayer.multiplayer_peer = peer
-    multiplayer.peer_connected.connect(_on_peer_connected)
-    multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+```csharp
+// Server
+public void StartServer(int port = 9999, int maxClients = 16)
+{
+    var peer = new ENetMultiplayerPeer();
+    var error = peer.CreateServer(port, maxClients);
+    if(error != Error.Ok)
+    {
+        GD.PushError($"Failed to create server: {error}");
+        return;
+    }
+    Multiplayer.MultiplayerPeer = peer;
+    Multiplayer.PeerConnected += OnPeerConnected;
+    Multiplayer.PeerDisconnected += OnPeerDisconnected;
+}
 
-# Client
-func connect_to_server(address: String = "127.0.0.1", port: int = 9999):
-    var peer = ENetMultiplayerPeer.new()
-    var error = peer.create_client(address, port)
-    if error != OK:
-        push_error("Failed to connect: %s" % error)
-        return
-    multiplayer.multiplayer_peer = peer
-    multiplayer.connected_to_server.connect(_on_connected)
-    multiplayer.connection_failed.connect(_on_connection_failed)
-    multiplayer.server_disconnected.connect(_on_server_disconnected)
+// Client
+public void ConnectToServer(string address = "127.0.0.1", int port = 9999)
+{
+    var peer = new ENetMultiplayerPeer();
+    var error = peer.CreateClient(address, port);
+    if(error != Error.Ok)
+    {
+        GD.PushError($"Failed to connect: {error}");
+        return;
+    }
+    Multiplayer.MultiplayerPeer = peer;
+    Multiplayer.ConnectedToServer += OnConnected;
+    Multiplayer.ConnectionFailed += OnConnectionFailed;
+    Multiplayer.ServerDisconnected += OnServerDisconnected;
+}
 ```
 
 ### RPC System
 
-```gdscript
-# Define RPCs with @rpc annotation
-# Modes: any_peer, authority (only multiplayer authority can call)
-# Sync: call_local, call_remote (default)
-# Transfer: unreliable, unreliable_ordered, reliable
+```csharp
+// Define RPCs with [Rpc] attribute
+// Modes: AnyPeer, Authority (only multiplayer authority can call)
+// CallMode: CallLocal, CallRemote (default)
+// TransferMode: Unreliable, UnreliableOrdered, Reliable
 
-@rpc("any_peer", "call_local", "reliable")
-func send_chat_message(message: String):
-    # Runs on all peers when called with .rpc()
-    chat_display.add_message(message)
+[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+public void SendChatMessage(string message)
+{
+    // Runs on all peers when called with Rpc()
+    _chatDisplay.AddMessage(message);
+}
 
-@rpc("authority", "call_remote", "unreliable_ordered")
-func sync_position(pos: Vector2, vel: Vector2):
-    position = pos
-    velocity = vel
+[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.UnreliableOrdered)]
+public void SyncPosition(Vector2 pos, Vector2 vel)
+{
+    Position = pos;
+    _velocity = vel;
+}
 
-# Calling RPCs
-send_chat_message.rpc("Hello everyone!")              # Call on ALL peers
-sync_position.rpc_id(target_peer_id, pos, vel)        # Call on specific peer
+// Calling RPCs
+_ = Rpc(MethodName.SendChatMessage, "Hello everyone!");      // Call on ALL peers
+_ = RpcId(_targetPeerId, MethodName.SyncPosition, pos, vel); // Call on specific peer
 ```
 
 ### RPC Transfer Modes
@@ -327,36 +360,38 @@ sync_position.rpc_id(target_peer_id, pos, vel)        # Call on specific peer
 
 Automatically replicates node creation across peers.
 
-```gdscript
-# In the scene tree:
-# Game
-#   ├── MultiplayerSpawner (spawn_path = Players, auto_spawn_list = [player_scene])
-#   └── Players/
+```csharp
+// In the scene tree:
+// Game
+//   ├── MultiplayerSpawner (spawn_path = Players, auto_spawn_list = [player_scene])
+//   └── Players/
 
-# Server spawns — all clients automatically get the node
-func spawn_player(peer_id: int):
-    var player = player_scene.instantiate()
-    player.name = str(peer_id)
-    $Players.add_child(player)
-    # MultiplayerSpawner handles replication to other peers
+// Server spawns — all clients automatically get the node
+private void SpawnPlayer(long peerId)
+{
+    var player = _playerScene.Instantiate();
+    player.Name = peerId.ToString();
+    GetNode("Players").AddChild(player);
+    // MultiplayerSpawner handles replication to other peers
+}
 ```
 
 ### MultiplayerSynchronizer
 
 Automatically replicates property changes from authority to other peers.
 
-```gdscript
-# Attach MultiplayerSynchronizer as child of the node to sync
-# Configure synced properties in the inspector or via code:
+```csharp
+// Attach MultiplayerSynchronizer as child of the node to sync
+// Configure synced properties in the inspector or via code:
 
-# In the scene tree:
-# Player (authority = peer_id)
-#   ├── MultiplayerSynchronizer
-#   │     replication_config:
-#   │       position → always (unreliable)
-#   │       health → on_change (reliable)
-#   │       animation_state → always (unreliable_ordered)
-#   └── Sprite2D
+// In the scene tree:
+// Player (authority = peer_id)
+//   ├── MultiplayerSynchronizer
+//   │     replication_config:
+//   │       position → always (unreliable)
+//   │       health → on_change (reliable)
+//   │       animation_state → always (unreliable_ordered)
+//   └── Sprite2D
 ```
 
 Replication modes:
@@ -365,35 +400,45 @@ Replication modes:
 
 ### Authority Model
 
-```gdscript
-# Server assigns authority over player nodes
-func _on_peer_connected(peer_id: int):
-    var player = spawn_player(peer_id)
-    player.set_multiplayer_authority(peer_id)
-    # Now peer_id owns this node — their RPCs with "authority" mode work
+```csharp
+// Server assigns authority over player nodes
+private void OnPeerConnected(long peerId)
+{
+    var player = SpawnPlayer(peerId);
+    player.SetMultiplayerAuthority((int)peerId);
+    // Now peerId owns this node — their RPCs with Authority mode work
+}
 
-# Check authority in game logic
-func _physics_process(delta):
-    if not is_multiplayer_authority():
-        return  # only the authority processes input for this node
-    var input = gather_input()
-    apply_movement(input, delta)
+// Check authority in game logic
+public override void _PhysicsProcess(double delta)
+{
+    if(!IsMultiplayerAuthority())
+    {
+        return;  // only the authority processes input for this node
+    }
+    var input = GatherInput();
+    ApplyMovement(input, delta);
+}
 ```
 
 ### WebSocket Peer (HTML5 Export)
 
-```gdscript
-# Same API, different transport — swap ENet for WebSocket
-func start_websocket_server(port: int = 9999):
-    var peer = WebSocketMultiplayerPeer.new()
-    peer.create_server(port)
-    multiplayer.multiplayer_peer = peer
+```csharp
+// Same API, different transport — swap ENet for WebSocket
+public void StartWebSocketServer(int port = 9999)
+{
+    var peer = new WebSocketMultiplayerPeer();
+    peer.CreateServer(port);
+    Multiplayer.MultiplayerPeer = peer;
+}
 
-# Client
-func connect_websocket(url: String = "ws://127.0.0.1:9999"):
-    var peer = WebSocketMultiplayerPeer.new()
-    peer.create_client(url)
-    multiplayer.multiplayer_peer = peer
+// Client
+public void ConnectWebSocket(string url = "ws://127.0.0.1:9999")
+{
+    var peer = new WebSocketMultiplayerPeer();
+    peer.CreateClient(url);
+    Multiplayer.MultiplayerPeer = peer;
+}
 ```
 
 - Required for web exports (browsers cannot use raw UDP/ENet)
@@ -594,14 +639,14 @@ The most effective anti-cheat is a server that validates everything.
 
 ### Local Multi-Instance Testing
 
-```gdscript
-# Godot: launch multiple instances from editor
-# Project Settings → Run → Multiple Instances → set to 2-4
+```csharp
+// Godot: launch multiple instances from editor
+// Project Settings → Run → Multiple Instances → set to 2-4
 
-# Or use OS.execute to launch headless server + client windows
-# Command line:
-# godot --headless --server       # server instance
-# godot --client --connect=127.0.0.1  # client instance(s)
+// Or use OS.Execute() to launch headless server + client windows
+// Command line:
+// godot --headless --server       # server instance
+// godot --client --connect=127.0.0.1  # client instance(s)
 ```
 
 - Always test with at least 3 instances: server + 2 clients

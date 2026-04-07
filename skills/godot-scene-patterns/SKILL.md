@@ -10,6 +10,7 @@ triggers:
   - inherited scene
   - scene patterns
 category: gamedev
+version: "1.0.0"
 ---
 
 # Godot 4.6 C# Scene Composition Patterns

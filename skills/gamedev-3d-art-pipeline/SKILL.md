@@ -1,6 +1,17 @@
 ---
 name: gamedev-3d-art-pipeline
 description: 3D asset pipeline for Godot 4.6 — Blender to Godot workflow, glTF import, PBR materials, LOD, mesh optimization, MeshInstance3D, and procedural mesh generation
+triggers:
+  - 3D art pipeline
+  - glTF
+  - PBR materials
+  - LOD
+  - mesh optimization
+  - MeshInstance3D
+  - Blender to Godot
+  - asset import
+  - procedural mesh
+version: "1.0.0"
 ---
 
 # 3D Art Pipeline — Godot 4.6
@@ -76,6 +87,42 @@ Runtime mesh generation for terrain, VFX, and dynamic geometry.
 - Typical workflow: `SurfaceTool` builds geometry, commits to `ArrayMesh`, assigned to `MeshInstance3D.Mesh`.
 - For terrain: generate heightmap-based mesh, split into chunks, apply LOD per chunk.
 
+## CrystalMagica: Current Asset State and Pipeline Roadmap
+
+CrystalMagica is a **3D MMO platformer** (CharacterBody3D, Node3D, Vector3, 3D physics) with a sidescroller camera angle (2.5D gameplay). All engine APIs are 3D — MeshInstance3D and LOD3D apply directly.
+
+**Current placeholder meshes** — art is not yet in the game. All characters and enemies are represented by built-in primitive meshes:
+
+- Players: `CapsuleMesh` assigned to a `MeshInstance3D` child of `CharacterBody3D`
+- Enemies: `SphereMesh` or `BoxMesh` depending on enemy type
+- Level geometry: `BoxMesh` platforms and walls
+
+This is intentional scaffolding. The primitive meshes allow the gameplay, physics, and networking systems to be fully developed before art is integrated.
+
+**Future pipeline** — when art production begins, the flow will be:
+
+1. Model in Blender → export `.glb`
+2. Import into Godot, configure import settings (see Import Settings section)
+3. Replace the placeholder `MeshInstance3D.Mesh` with the imported mesh resource
+4. Apply LOD (see LOD section) — critical for MMO entity counts
+5. Cross-reference `gamedev-blender` skill for Blender-specific export settings, armatures, and animation retargeting — do not duplicate that content here
+
+## Sprite3D for 2.5D Aesthetics
+
+If CrystalMagica adopts sprite art rendered in 3D space (common in 2.5D platformers like Dead Cells, Hollow Knight with 3D backgrounds), `Sprite3D` is the relevant node:
+
+- `Sprite3D` renders a `Texture2D` as a billboard or fixed-orientation quad in 3D space
+- **Billboard mode** (`Billboard = Enabled`): sprite always faces the camera — good for VFX, hit numbers, health bars
+- **Fixed orientation** (`Billboard = Disabled`): sprite is placed at a fixed angle in 3D space — good for characters viewed from a consistent camera angle in a sidescroller
+- `Sprite3D.PixelSize` converts pixel units to 3D world units — calibrate so sprite scale matches `CharacterBody3D` collision shape
+- `AnimatedSprite3D` extends `Sprite3D` with `SpriteFrames` — frame-based animation without a full skeletal rig
+- `Sprite3D` participates in 3D rendering (shadow casting, lighting, LOD) unlike a 2D `Sprite2D` overlay
+- For characters: parent `Sprite3D` (or `AnimatedSprite3D`) under `CharacterBody3D`, replacing the placeholder `MeshInstance3D` when art is ready
+
+## Blender to Godot — Cross-Reference
+
+This skill covers Godot-side import, materials, and optimization. For Blender-side workflow (export settings, armature prep, UV unwrapping, normal baking), see the `gamedev-blender` skill. Do not duplicate that content here — load both skills when the full pipeline is in scope.
+
 ## Optimization
 
 Techniques for maintaining framerate with large 3D scenes.
@@ -86,3 +133,11 @@ Techniques for maintaining framerate with large 3D scenes.
 - **GPU Instancing** — enable on ShaderMaterial for custom instanced rendering. Use instance uniforms for per-instance variation (color, scale, animation offset).
 - **Visibility Culling** — the engine frustum-culls automatically. Assist it with `VisibleOnScreenNotifier3D` to also pause logic on off-screen entities.
 - For MMO entity counts: MultiMeshInstance3D for cosmetic props, aggressive LOD for player characters, server-driven interest management to limit visible entity count.
+
+## Anti-Patterns
+
+- **Swapping to 2D nodes for characters**: do not replace `CharacterBody3D` + `MeshInstance3D` with `CharacterBody2D` + `Sprite2D` to achieve a sidescroller look. CrystalMagica runs a 3D physics simulation — mixing 2D nodes breaks collision, physics layers, and the networking model.
+- **Editing `.import` files manually**: these are generated metadata. Any manual edits are overwritten on reimport. Change settings only via the Godot Import dock.
+- **Forgetting to apply transforms in Blender**: unapplied scale/rotation on meshes causes mismatched transforms in Godot. Always `Ctrl+A` > All Transforms before glTF export.
+- **Skipping LOD on MMO entities**: without LOD, per-frame GPU cost scales linearly with visible entity count. In an MMO with dozens of players and enemies on screen, this is a guaranteed performance cliff.
+- **Using ImmediateMesh for production geometry**: `ImmediateMesh` rebuilds every frame and is intended for debug visualization only. Use `SurfaceTool` → `ArrayMesh` for any geometry that persists.

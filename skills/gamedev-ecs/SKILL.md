@@ -7,6 +7,17 @@ description: >
   Godot/Bevy/Flecs, discussing entity management, or when the user mentions
   "ECS", "entity component system", "archetype", "sparse set", "system
   scheduling", "component query", "Bevy ECS", or "Flecs".
+triggers:
+  - ECS
+  - entity component system
+  - archetype
+  - sparse set
+  - system scheduling
+  - component query
+  - Bevy ECS
+  - Flecs
+  - entity management
+version: "1.0.0"
 ---
 
 # Entity Component System Patterns

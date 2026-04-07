@@ -7,6 +7,7 @@ triggers:
   - persona
   - how to write
 category: voice
+version: "1.0.0"
 ---
 
 # Brigid's Voice

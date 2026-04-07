@@ -4,6 +4,16 @@ description: Comprehensive guide to the Godot .NET MCP server — programmatic s
 version: 1.0.0
 agent: brigid
 tags: [godot, mcp, dotnet, csharp, scene-manipulation, game-dev]
+triggers:
+  - godot-dotnet-mcp
+  - Godot MCP server
+  - scene manipulation
+  - script analysis
+  - C# binding audit
+  - runtime diagnostics
+  - intelligence_scene_analyze
+  - intelligence_script_patch
+  - scene patch
 ---
 
 # Godot .NET MCP — Skill Reference

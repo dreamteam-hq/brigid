@@ -7,6 +7,19 @@ description: >
   service composition, or when the user mentions "DI", "dependency injection",
   "service registration", "AddScoped", "AddTransient", "AddSingleton", "keyed
   services", "decorator", "Scrutor", "IServiceCollection", or "captive dependency".
+triggers:
+  - dependency injection
+  - DI
+  - service registration
+  - AddScoped
+  - AddTransient
+  - AddSingleton
+  - keyed services
+  - decorator pattern
+  - Scrutor
+  - IServiceCollection
+  - captive dependency
+version: "1.0.0"
 ---
 
 # Dependency Injection

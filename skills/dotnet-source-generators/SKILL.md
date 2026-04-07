@@ -3,6 +3,17 @@ name: dotnet-source-generators
 description: >
   Expert-level knowledge of C# Incremental Source Generators (Roslyn, .NET 10),
   PR review for generator code, and Godot 4.x C# integration with custom generators.
+triggers:
+  - source generator
+  - incremental generator
+  - IIncrementalGenerator
+  - Roslyn generator
+  - code generation
+  - GeneratorSyntaxContext
+  - ISourceGenerator
+  - syntax receiver
+  - generated code
+version: "1.0.0"
 ---
 
 # Skill: C# Source Generators (.NET 10 / Godot 4)

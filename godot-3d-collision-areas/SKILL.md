@@ -4,8 +4,19 @@ description: >
   Godot 4.6 3D collision system — Area3D signals, CollisionShape3D primitives,
   collision layer/mask management, one-way platform patterns via layer toggling,
   down-jump implementation, and 2.5D constraints. All C# / .NET 10.
-  Triggers: collision, Area3D, hitbox, hurtbox, one-way platform, down jump,
-  collision layer, collision mask, attack area, 2.5D.
+triggers:
+  - collision
+  - Area3D
+  - hitbox
+  - hurtbox
+  - one-way platform
+  - down jump
+  - collision layer
+  - collision mask
+  - attack area
+  - 2.5D
+  - CollisionShape3D
+version: "1.0.0"
 ---
 
 # Godot 4.6 3D Collision & Areas (C#)
@@ -304,6 +315,79 @@ Hitboxes detect hurtboxes, not body layers. This keeps combat detection independ
 
 ---
 
+## CharacterBody3D + MoveAndSlide
+
+CrystalMagica's `PlayerNode` extends `CharacterBody3D`. The physics loop:
+
+```csharp
+public override void _PhysicsProcess(double delta)
+{
+    var velocityBeforePhysics = Velocity;
+    velocityBeforePhysics.Y -= gravity * (float)delta;  // apply gravity
+    Velocity = velocityBeforePhysics;
+    _ = MoveAndSlide();
+}
+```
+
+Key rules:
+- Set `Velocity` BEFORE calling `MoveAndSlide()`. The engine reads it, resolves collisions, and writes the corrected value back.
+- `IsOnFloor()`, `IsOnWall()`, `IsOnCeiling()` are only valid AFTER `MoveAndSlide()` runs.
+- Do NOT multiply `delta` on the `MoveAndSlide()` call itself -- it handles time internally. Apply `delta` only when modifying velocity (e.g., gravity).
+- Discard the `MoveAndSlide()` return value (`_ =`) -- query `IsOnFloor()` etc. instead.
+
+---
+
+## Gravity and Jump
+
+CrystalMagica pattern -- gravity applied every frame, jump adds upward velocity:
+
+```csharp
+// Gravity (in _PhysicsProcess)
+velocityBeforePhysics.Y -= gravity * (float)delta;
+
+// Jump (only when grounded)
+if (Input.IsActionJustPressed("jump") && IsOnFloor())
+    Velocity = Velocity with { Y = Velocity.Y + jumpVelocity };
+
+// Horizontal movement via pattern matching
+Velocity = Velocity with { X = speed };
+
+// Stop horizontal
+Velocity = Velocity with { X = 0 };
+```
+
+Default values: `gravity = 22f`, `jumpVelocity = 9f`, `walkSpeed = 5f`.
+
+For sidescroller, clamp Z drift: `Position = Position with { Z = 0f }`.
+
+C# `with` expressions on Vector3 are clean for modifying single axes without touching others.
+
+---
+
+## RigidBody3D
+
+For server-spawned physics objects (crates, barrels, destructibles):
+
+- **Freeze**: set `Freeze = true` to disable physics until needed (e.g., spawn frozen, unfreeze on interaction).
+- **Tuning**: `Mass`, `PhysicsMaterialOverride.Friction`, `PhysicsMaterialOverride.Bounce`.
+- **Forces**: `ApplyForce(vector)` for sustained push, `ApplyImpulse(vector)` for one-shot hit.
+- **Axis locks**: `AxisLockLinearZ = true` for sidescroller constraint. Also `AxisLockAngularX/Y` to prevent unwanted tumbling.
+- **Server authority**: server spawns and owns RigidBody3D nodes; clients receive state updates.
+
+---
+
+## Multiplayer Physics
+
+CrystalMagica's approach:
+
+1. **Local player** runs full input + physics (`LocalPlayerNode._PhysicsProcess` reads input, calls `Jump()`/`MoveBegin()`, then `base._PhysicsProcess()` which calls `MoveAndSlide()`).
+2. **Remote players** receive action messages (Jump, MoveBegin, Stop) and replay them through the same `PlayerNode` methods -- same `MoveAndSlide()` path yields approximately deterministic results.
+3. **Server snapshots** periodically correct drift with authoritative position.
+4. **Physics isolation**: remote players on separate collision layers so their `MoveAndSlide()` does not interfere with local player collisions.
+5. **Deferred activation**: `SetPhysicsProcess(false)` in `_Ready()`, enable only after `Bind()` connects a ViewModel -- prevents physics running on uninitialized nodes.
+
+---
+
 ## One-Way Platforms in 3D
 
 Godot 4 has **no built-in one-way collision for 3D** (unlike 2D's `one_way_collision`). Implement via collision layer toggling.
@@ -470,11 +554,8 @@ SetCollisionMaskValue(PhysicsLayers.OneWayPlatforms, false);
 
 ## Cross-References
 
-This skill extends the collision layer strategy and body type selection covered in `godot-physics-3d`. Load that skill first for foundational 3D physics concepts; load this skill when the task involves Area3D overlap detection, hitbox/hurtbox patterns, or one-way platforms.
-
 | Skill | When to Load |
 |-------|-------------|
-| `godot-physics-3d` | Collision layer strategy, CharacterBody3D movement physics, body type selection |
 | `gamedev-3d-platformer` | Movement physics, coyote time, input buffering, state machine |
 | `gamedev-godot` | Scene architecture, C# scripting, MCP server workflow |
 | `gamedev-3d-ai` | Enemy patrol, pathfinding, behavior trees |

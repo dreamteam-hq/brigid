@@ -10,6 +10,7 @@ triggers:
   - signal bus
   - observer pattern
 category: gamedev
+version: "1.0.0"
 ---
 
 # Godot 4.6 C# Signal Patterns

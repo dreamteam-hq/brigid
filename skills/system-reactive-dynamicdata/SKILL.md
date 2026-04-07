@@ -10,9 +10,35 @@ category: reference
 tags:
   domain: [dotnet, gamedev]
   depth: specialized
+triggers:
+  - System.Reactive
+  - DynamicData
+  - SourceCache
+  - IObservable
+  - Subject
+  - BehaviorSubject
+  - reactive pipeline
+  - Subscribe
+  - INotifyCollectionChanged
+version: "1.0.0"
 ---
 
 # System.Reactive and DynamicData for .NET 10 Game Clients
+
+## MVVM in CrystalMagica
+
+CrystalMagica uses MVVM as a backend architecture pattern for its Godot 4.6 game client. This is NOT WPF/MAUI MVVM.
+
+- **Models** live in the shared `CrystalMagica` library (`CrystalMagica.Models`). These are wire types like `CharacterData`, `CharacterAction`, and `MoveBegin` used by both client and server.
+- **ViewModels** live in `CrystalMagica.Game/ViewModels/`. They are client-side only and driven by System.Reactive. `MainViewModel`, `RemoteCharacterVM`, `LocalPlayerCharacterVM`.
+- **Views** are Godot nodes in `CrystalMagica.Game/Views/`. `PlayerNode` (base CharacterBody3D), `RemotePlayerNode`, `ItemsNode`.
+- The server has no ViewModels. MapHub owns models directly.
+
+### LocalPlayerCharacterVM vs RemoteCharacterVM
+
+- **LocalPlayerCharacterVM** holds plain properties (`Position` as `Godot.Vector3`, `Color`). It captures local input and sends actions to the server via `serverClient.Map.RelayCharacterAction()`. No Rx observables — the local view reads its properties directly.
+- **RemoteCharacterVM** is Rx-driven. It exposes `Subject<CharacterAction> Updates` and derives `IObservable<Vector2> Position`. The view subscribes to these streams to replicate remote player state.
+- Both feed `PlayerNode` (the shared `CharacterBody3D` base with physics, gravity, and `IInputAction` methods) but through different paths: local drives it from input, remote drives it from Rx subscriptions.
 
 ## Subject Types
 
@@ -24,7 +50,7 @@ Three subject types serve distinct roles. Choosing the wrong one produces subtle
 | `BehaviorSubject<T>` | Yes (read-only) | Last value | State that always has a current value |
 | `ValueSubject<T>` | Yes (read/write) | Last value | CrystalMagica wrapper over `BehaviorSubject<T>` with get/set `.Value` |
 
-### Subject<T> -- Event Streams
+### Subject\<T\> — Event Streams
 
 Use when there is no meaningful "current value." Character actions are events, not state.
 
@@ -47,7 +73,7 @@ _ = viewModel.Updates.Subscribe(x =>
 });
 ```
 
-### ValueSubject<T> -- Mutable State with Notifications
+### ValueSubject\<T\> — Mutable State with Notifications
 
 Wraps `BehaviorSubject<T>`. Setting `.Value` calls `OnNext()` internally. Implements `ISubject<T>`, so it is both an observable and an observer.
 
@@ -113,7 +139,7 @@ The resulting `IObservable<Vector2>` emits the spawn position first, then every 
 | `.Select(x => ...)` | Transform each element | Extract a field from a composite event |
 | `.Where(x => ...)` | Filter elements | Skip nulls, filter by type |
 | `.StartWith(value)` | Emit an initial value before the source | Derived state that needs a starting value |
-| `.Subscribe(onNext)` | Terminal -- attach an observer | Wire the pipeline to a side effect |
+| `.Subscribe(onNext)` | Terminal — attach an observer | Wire the pipeline to a side effect |
 | `.CombineLatest(other, (a, b) => ...)` | Merge latest values from two streams | Derived state from multiple inputs |
 | `.Merge(other)` | Interleave two streams into one | Flatten independent event sources |
 | `.DistinctUntilChanged()` | Suppress consecutive duplicates | Avoid redundant updates |
@@ -150,7 +176,7 @@ RemoteCharacterList = list;
 |-----------|------|-------|
 | Add or update | `cache.AddOrUpdate(item)` | Upsert by key selector |
 | Remove by key | `cache.Remove(key)` | |
-| Lookup by key | `cache.Lookup(key)` | Returns `Optional<T>` -- check `.HasValue` |
+| Lookup by key | `cache.Lookup(key)` | Returns `Optional<T>` — check `.HasValue` |
 | Observe changes | `cache.Connect()` | Returns changeset stream |
 
 ### Lookup Pattern
@@ -252,13 +278,15 @@ Use when you need dictionary-style `[]` access AND collection-changed notificati
 
 ## Collection Binding with Godot Nodes
 
-### ItemsNode + IBindable
+### ItemsNode Pattern
 
-`ReadOnlyObservableCollection` from `Bind()` implements `INotifyCollectionChanged`. `ItemsNode` subscribes to `CollectionChanged` and manages child Godot scene instances:
+`ItemsNode` is a generic `Node3D` that observes a ViewModel collection and manages child scene instances:
 
-- **Add** -- instantiate `PackedScene`, cast to `IBindable`, call `Bind(viewModel)`, `AddChild(node)`
-- **Remove** -- lookup node by VM reference, `QueueFree()`
-- **Reset** -- despawn all, re-create from current items
+- Has an `[Export] PackedScene NodeTemplate` set in the Godot editor.
+- `Items` property accepts any `INotifyCollectionChanged`. Setting it subscribes to `CollectionChanged`.
+- **Add** — instantiate `NodeTemplate`, cast to `IBindable`, call `Bind(item)`, then `AddChild(node)`. Tracks in `_nodesByItem` dictionary.
+- **Remove** — look up the node by VM reference, call `QueueFree()`, remove from dictionary.
+- **Reset** — despawn all existing nodes (`QueueFree()`), clear dictionary, then re-create nodes for all current items.
 
 ```csharp
 // Main._Ready() -- wire ItemsNodes to ViewModel collections
@@ -346,20 +374,20 @@ All Rx subscriptions fire on the main thread. The architecture guarantees this:
 1. `SocketManager.Run()` reads WebSocket frames on a background task
 2. Frames go into a `Channel<MemoryStream>` (thread-safe)
 3. `MainViewModel.Process()` drains the channel inside `_Process()` (main thread)
-4. `OnNext()` calls happen inside `Process()` -- subscribers always execute on the main thread
+4. `OnNext()` calls happen inside `Process()` — subscribers always execute on the main thread
 
 **No `ObserveOn` is needed.** The channel decouples the background socket from the main-thread Rx pipeline.
 
 ### Disposal Strategies
 
-The codebase currently uses `_ =` discard universally -- this is safe when subscriptions live for the node's full lifetime.
+The codebase currently uses `_ =` discard universally — this is safe when subscriptions live for the node's full lifetime.
 
 | Scenario | Strategy |
 |----------|----------|
-| Subscription lives for node lifetime | `_ =` discard -- GC-safe when source completes |
+| Subscription lives for node lifetime | `_ =` discard — GC-safe when source completes |
 | Subscription must be cut early | Store `IDisposable`, call `.Dispose()` in `_ExitTree()` |
-| Multiple subscriptions per node | **RECOMMENDED:** `CompositeDisposable` -- dispose all at once |
-| SourceCache pipeline | `_ = cache.Connect().Bind(...).Subscribe()` -- lives for VM lifetime |
+| Multiple subscriptions per node | **RECOMMENDED:** `CompositeDisposable` — dispose all at once |
+| SourceCache pipeline | `_ = cache.Connect().Bind(...).Subscribe()` — lives for VM lifetime |
 
 > **RECOMMENDED patterns** for explicit disposal (`CompositeDisposable`, `DisposeWith`,
 > `_ExitTree` teardown), Godot lifecycle integration, error handling (`Catch`, `Retry`),
@@ -417,7 +445,7 @@ Position = Updates.Select(x => x.Position).StartWith(data.Position);
 
 ### Duplicate Pipelines on the Same Cache
 
-Multiple `Connect()` calls are fine with different operators. Identical pipelines are waste -- bind once, share the result.
+Multiple `Connect()` calls are fine with different operators. Identical pipelines are waste — bind once, share the result.
 
 ### Swallowing Errors
 
@@ -432,7 +460,7 @@ Always pass an `onError` handler to `Subscribe`. Without it, an error silently k
 
 ## Testing Rx Code
 
-> **Recommended approach** -- no Rx tests currently exist in CrystalMagica.
+> **Recommended approach** — no Rx tests currently exist in CrystalMagica.
 > Use `Microsoft.Reactive.Testing.TestScheduler` for deterministic time. Subscribe
-> synchronously and assert immediately -- `StartWith` and `Subject.OnNext` emit inline.
+> synchronously and assert immediately — `StartWith` and `Subject.OnNext` emit inline.
 > For examples, see [references/advanced-patterns.md](references/advanced-patterns.md).

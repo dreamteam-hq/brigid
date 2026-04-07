@@ -13,6 +13,7 @@ triggers:
   - reactive
   - ItemsNode
 category: dotnet
+version: "1.0.0"
 ---
 
 # .NET MVVM Backend Architecture

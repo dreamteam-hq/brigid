@@ -1,6 +1,18 @@
 ---
 name: concurrency-model-selection
-description: "Concurrency model decision framework — CSP vs actors vs async/await vs structured concurrency, by problem characteristics and language" Triggers: concurrency model, CSP vs actors, async await, structured concurrency, data parallelism, message passing, shared state concurrency, concurrent programming.
+description: "Concurrency model decision framework — CSP vs actors vs async/await vs structured concurrency, by problem characteristics and language"
+triggers:
+  - concurrency model
+  - CSP vs actors
+  - async await
+  - structured concurrency
+  - data parallelism
+  - message passing
+  - shared state concurrency
+  - concurrent programming
+  - goroutines
+  - channels
+version: "1.0.0"
 ---
 
 # Concurrency Model Selection

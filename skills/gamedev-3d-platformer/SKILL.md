@@ -1,6 +1,18 @@
 ---
 name: gamedev-3d-platformer
 description: 3D sidescroller platformer mechanics in Godot 4.6 C# — CharacterBody3D movement, gravity, jump physics, state machines, camera, collision layers, and multiplayer replay
+triggers:
+  - platformer
+  - CharacterBody3D
+  - MoveAndSlide
+  - jump physics
+  - gravity
+  - sidescroller
+  - state machine
+  - IsOnFloor
+  - movement
+  - jump cut
+version: "1.0.0"
 ---
 
 # 3D Sidescroller Platformer Mechanics (Godot 4.6 C#)
