@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "godot": {
+      "url": "http://127.0.0.1:3000/mcp"
+    },
+    "roslyn": {
+      "command": "/Users/matt/.dotnet/tools/roslyn-mcp",
+      "args": [],
+      "env": {}
+    },
+    "blender": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "env": {}
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    },
+    "mermaid": {
+      "command": "npx",
+      "args": ["-y", "claude-mermaid"],
+      "env": {}
+    },
+    "nuget": {
+      "command": "dotnet",
+      "args": ["tool", "run", "nuget.mcp.server"],
+      "env": {}
+    }
+  }
+}
