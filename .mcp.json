@@ -4,8 +4,8 @@
       "url": "http://127.0.0.1:3000/mcp"
     },
     "roslyn": {
-      "command": "/Users/matt/.dotnet/tools/roslyn-mcp",
-      "args": [],
+      "command": "dnx",
+      "args": ["RoslynMcp.Server", "-y", "--allow-roll-forward"],
       "env": {}
     },
     "blender": {
@@ -24,8 +24,8 @@
       "env": {}
     },
     "nuget": {
-      "command": "dotnet",
-      "args": ["tool", "run", "nuget.mcp.server"],
+      "command": "dnx",
+      "args": ["NuGet.Mcp.Server", "-y"],
       "env": {}
     }
   }
