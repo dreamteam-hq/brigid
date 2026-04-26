@@ -266,21 +266,3 @@ Content is topic-first, versioned, and machine-indexed via `MANIFEST.jsonl` (que
 
 The pipeline: raw content lands in `learning-corpus` → ingestion scripts in `learning` extract + shape → promote to agent brain (Postgres tables + Neo4j nodes). Same deterministic-first pattern as the API surface ingestion.
 
----
-
-## Design Partnership
-
-The combat resolver built in this session is a concrete example. Four algorithm pivots in one conversation:
-
-1. Cumulative distribution function — floating point thresholds, normalization loop
-2. Matt: "I find this extremely confusing"
-3. Research agents (dev + teacher) independently converge on the same answer
-4. Shipped [fitness proportionate selection](https://en.wikipedia.org/wiki/Fitness_proportionate_selection) — expand weights into a flat array, pick a random index
-
-Along the way: startup validation added then removed ("scope creep"), tuples replaced with record structs, lock removed in favor of `ConcurrentDictionary.TryRemove`. Each change driven by Matt's feedback, informed by Brigid's knowledge of .NET patterns and game server architecture.
-
-459 design pivots across 7 sessions. The pattern: agent proposes, engineer steers.
-
-> "Arthur's concern about AI hurting coding skills is valid if you use it as 'jesus take the wheel.' I use it as a fast but unreliable intern who needs every line reviewed."
->
-> — Matt, session summary for Arthur
