@@ -12,9 +12,9 @@
 
 ## Executive Summary
 
-Brigid is one of four AI agents in the DreamTeams ecosystem — a Claude Code plugin framework Matt built starting March 10, 2026. The other three: Iris (PM), Docent (ecosystem curator), and Den Mother (legal ops for wolfpack-law custody litigation). Wolfpack came first. Every architectural pattern in DreamTeams — skills, brains, hooks, MCP servers — was extracted from real-world pressure in Massachusetts custody court, where hallucinated legal citations can reach filings.
+Brigid is one of four AI agents in the DreamTeams ecosystem — a Claude Code plugin framework Matt started building in early March 2026. The other three: Iris (PM), Docent (ecosystem curator), and Den Mother (legal ops for wolfpack-law custody litigation). Wolfpack came first. Every architectural pattern in DreamTeams — skills, brains, hooks, MCP servers — was extracted from real-world pressure in Massachusetts custody court, where hallucinated legal citations can reach filings.
 
-Brigid's job: design partner for CrystalMagica, a Godot 4.6 C# MMO 2D platformer Matt is building with his son Arthur. Not a code generator. A collaborator who knows .NET 10, Godot's API surface (44,000 nodes in a Neo4j knowledge graph), multiplayer netcode, and game architecture — and who operates under strict rules Matt enforces through memory, editorconfig, and a gated design workflow.
+Brigid's job: design partner for CrystalMagica, a Godot 4.6 C# MMO 2D platformer Matt is building with his best friend Arthur. Not a code generator. A collaborator who knows .NET 10, Godot's API surface (44,000 nodes in a Neo4j knowledge graph), multiplayer netcode, and game architecture — and who operates under strict rules Matt enforces through memory, editorconfig, and a gated design workflow.
 
 **Persona is the agent; domain knowledge is the skill.** DreamTeams started with 17 proposed agents. It shipped with 2 (dev + dreamteam). Every other "agent" turned out to be a generalist with specialized skills loaded. This decision — made on day one — is still load-bearing 7 weeks later.
 
@@ -30,7 +30,20 @@ DreamTeams exists because Matt needed custody litigation support that wouldn't h
 
 That incident shaped everything. Without production consequences, you get a skill library that's never been stress-tested.
 
-**The 17 → 2 agent decision** (March 10, v0.1.0): Claude Code has a 10-agent ceiling. The original design had 17 domain specialists — `comms-consultant`, `supply-chain-sentinel`, etc. The realization: most "agents" are just knowledge containers. A comms consultant is a generalist with communications skills. So: collapse to `dev` (builds things) and `dreamteam` (thinks about things). Two agents cover the full behavior space. Any plugin combination stays within budget.
+**Timeline:**
+- **July 2024** — wolfpack repo created (originally CrewAI/Ollama stack)
+- **Feb 13, 2026** — CrystalMagica first commit. Matt and Arthur start the MMO.
+- **March 9** — DreamTeams first commit. PRD, plugin architecture, 6 plugins in one day.
+- **March 9** — wolfpack migrates from CrewAI to Claude Code + DreamTeams plugins
+- **March 10** — v0.1.0 ships. 17 → 2 agent consolidation. 46 skills, 33 commands, 8 hooks.
+- **March 11-14** — Den Mother born, Docent born, citation incident, 137 skills by v0.11.10
+- **March 16** — `me/dev-cm` workspace created (pre-Brigid game dev)
+- **March 28** — v0.28.0, 815 commits in 19 days. Iris sees project history.
+- **March 30** — Iris migrates to her own repo. Agents get their own homes.
+- **April 7** — Brigid upgraded, brain seeded with 44K Godot API nodes
+- **April 23** — This report. 48 skills, 9 MCP servers, 459+ design pivots logged.
+
+**The 17 → 2 agent decision** (v0.1.0): Claude Code has a 10-agent ceiling. The original design had 17 domain specialists — `comms-consultant`, `supply-chain-sentinel`, etc. Most "agents" turned out to be knowledge containers. A comms consultant is a generalist with communications skills. So: collapse to `dev` (builds things) and `dreamteam` (thinks about things). Two agents cover the full behavior space. Any plugin combination stays within budget.
 
 **The producer-consumer flywheel:**
 
