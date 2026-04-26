@@ -1,4 +1,4 @@
-# Brigid: Architecture, Brain, and Design Partnership
+# Brigid: Architecture and Brain Design
 
 ## The Assignment
 
@@ -12,79 +12,31 @@
 
 ## Executive Summary
 
-Brigid is one of four AI agents in the DreamTeams ecosystem — a Claude Code plugin framework Matt started building in early March 2026. The other three: Iris (PM), Docent (ecosystem curator), and Den Mother (legal ops for wolfpack-law custody litigation). Wolfpack came first. Every architectural pattern in DreamTeams — skills, brains, hooks, MCP servers — was extracted from real-world pressure in Massachusetts custody court, where hallucinated legal citations can reach filings.
+Brigid is a Claude Code agent built for game development — specifically CrystalMagica, a Godot 4.6 C# MMO 2D platformer. She is one of four agents in the DreamTeams ecosystem alongside Iris (PM), Docent (ecosystem curator), and Den Mother (legal ops).
 
-Brigid's job: design partner for CrystalMagica, a Godot 4.6 C# MMO 2D platformer Matt is building with his best friend Arthur. Not a code generator. A collaborator who knows .NET 10, Godot's API surface (44,000 nodes in a Neo4j knowledge graph), multiplayer netcode, and game architecture — and who operates under strict rules Matt enforces through memory, editorconfig, and a gated design workflow.
+48 skills across Godot, .NET, game architecture, multiplayer, and MMO persistence. 9 MCP servers with 120+ tools. A 4-quadrant brain with 44,000 Neo4j nodes mapping the complete Godot 4.6.1 API surface.
 
-**Persona is the agent; domain knowledge is the skill.** DreamTeams started with 17 proposed agents. It shipped with 2 (dev + dreamteam). Every other "agent" turned out to be a generalist with specialized skills loaded. This decision — made on day one — is still load-bearing 7 weeks later.
-
-Brigid carries 48 skills across Godot, .NET, game architecture, multiplayer, and MMO persistence. 9 MCP servers provide live IDE refactoring (Roslyn, 41 tools), Godot editor integration (15 intelligence tools), 3D asset pipeline (Blender, 22 tools), package management (NuGet), and documentation lookup (Context7). Her brain is a 4-quadrant store: Neo4j for the Godot API knowledge graph, Postgres for structured gamedev data, DuckDB for ad-hoc analytics, [LadybugDB](https://github.com/LadybugDB/mcp-server-ladybug) (in-memory graph engine) for ephemeral graph reasoning.
-
----
-
-## Origin: Wolfpack to DreamTeams
-
-DreamTeams exists because Matt needed custody litigation support that wouldn't hallucinate case citations.
-
-**The wolfpack-law project** (Brynn Detwiller's firm, Worcester County MA) was the original forcing function. Claude Code agents doing real legal work — drafting motions, managing evidence, tracking deadlines. The first round of AI-generated skills referenced **J.F. v. J.F.** — a completely fabricated case. In custody litigation, that reaches a filing. The fix: a citation verification chain (CourtListener MCP + verification skill + attorney review hook). Every cite gets checked before it touches a document.
-
-That incident shaped everything. Without production consequences, you get a skill library that's never been stress-tested.
-
-**Timeline:**
-- **July 2024** — wolfpack repo created (originally CrewAI/Ollama stack)
-- **Feb 13, 2026** — CrystalMagica first commit. Matt and Arthur start the MMO.
-- **March 9** — DreamTeams first commit. PRD, plugin architecture, 6 plugins in one day.
-- **March 9** — wolfpack migrates from CrewAI to Claude Code + DreamTeams plugins
-- **March 10** — v0.1.0 ships. 17 → 2 agent consolidation. 46 skills, 33 commands, 8 hooks.
-- **March 11-14** — Den Mother born, Docent born, citation incident, 137 skills by v0.11.10
-- **March 16** — `me/dev-cm` workspace created (pre-Brigid game dev)
-- **March 28** — v0.28.0, 815 commits in 19 days. Iris sees project history.
-- **March 30** — Iris migrates to her own repo. Agents get their own homes.
-- **April 7** — Brigid upgraded, brain seeded with 44K Godot API nodes
-- **April 23** — This report. 48 skills, 9 MCP servers, 459+ design pivots logged.
-
-**The 17 → 2 agent decision** (v0.1.0): Claude Code has a 10-agent ceiling. The original design had 17 domain specialists — `comms-consultant`, `supply-chain-sentinel`, etc. Most "agents" turned out to be knowledge containers. A comms consultant is a generalist with communications skills. So: collapse to `dev` (builds things) and `dreamteam` (thinks about things). Two agents cover the full behavior space. Any plugin combination stays within budget.
-
-**The producer-consumer flywheel:**
-
-```
-DreamTeams builds plugins/skills/MCP servers
-  → wolfpack uses them in real custody litigation
-  → wolfpack surfaces gaps and bugs
-  → upstream-advocate formalizes feedback
-  → DreamTeams ships fixes
-  → repeat
-```
-
-By v0.11.10 (March 14), wolfpack was 37% of the entire ecosystem by component count. Not because it was prioritized — because it was used hardest.
-
----
-
-## The Agents
-
-Four agents, each with their own brain and MCP server constellation.
-
-![DreamTeams Ecosystem](diagrams/ecosystem-map.png)
-
-| Agent | Domain | Brain | Skills | Key MCP Servers |
-|-------|--------|-------|--------|-----------------|
-| **Iris** | PM — boards, epics, multi-project orchestration | `iris-dev` (10K+ Postgres rows, 2K+ Neo4j nodes) | 50 | GitHub GraphQL, neo4j, postgres |
-| **Brigid** | Game dev — Godot 4.6 C#, .NET 10, MMO architecture | `cm-brigid-dev` (44K Neo4j nodes, 74K relationships) | 48 | Godot, Roslyn, Blender, NuGet, Context7 |
-| **Docent** | Ecosystem curator — plugin catalog, skill graph, registry | `docent-dev` | 16 | docent MCP, neo4j, postgres |
-| **Den Mother** | Legal ops — MA custody litigation, case knowledge graph | `packmind-dev` (300+ case documents) | 63 | packmind, courtlistener, slack |
+This document covers the architecture.
 
 ---
 
 ## Brain Architecture
 
-Every agent brain uses the same 4-quadrant model. Two axes: relational vs. graph, persistent vs. ephemeral.
+### The 4-Quadrant Model
+
+Every DreamTeams agent brain uses the same model. Two axes: relational vs. graph, persistent vs. ephemeral.
 
 ![Brain 4-Quadrant Model](diagrams/brain-quadrant.png)
 
+| | Relational | Graph |
+|---|---|---|
+| **Persistent** | PostgreSQL — structured data, aggregations, window functions | Neo4j — relationships, traversals, dependency chains |
+| **Ephemeral** | DuckDB — staging, cross-source joins, ad-hoc analytics, file exploration | [LadybugDB](https://github.com/LadybugDB/mcp-server-ladybug) — in-memory graph, per-session algorithm prototyping |
+
 **Design principles:**
-- Deterministic-first. Extract and Shape stages have zero LLM calls. LLMs enter only at Classify and Reason.
-- Plain DDL, no ORMs. Schema is SQL and Cypher.
-- Naming: `{prefix}-{agent}-{env}-{backend}`. Brigid's: `cm-brigid-dev-neo4j`, `cm-brigid-dev-postgres`.
+- **Deterministic-first.** Extract and Shape stages have zero LLM calls. LLMs enter only at Classify (Haiku) and Reason (Opus/Sonnet).
+- **Plain DDL, no ORMs.** Schema is SQL (Postgres) and Cypher (Neo4j).
+- **Convention over configuration.** Naming: `{prefix}-{agent}-{env}-{backend}`. Brigid's stores: `cm-brigid-dev-neo4j`, `cm-brigid-dev-postgres`.
 
 **Data flow:**
 
@@ -92,41 +44,141 @@ Every agent brain uses the same 4-quadrant model. Two axes: relational vs. graph
 Raw Input → EXTRACT (DuckDB) → SHAPE (DuckDB) → CLASSIFY (Haiku) → PROMOTE (Postgres) → PERSIST (Neo4j + Postgres)
 ```
 
-DuckDB is always the staging layer. Postgres is the relational truth. Neo4j is the relationship truth. [LadybugDB](https://github.com/LadybugDB/mcp-server-ladybug) is scratch paper — an in-memory graph engine (KuzuDB fork with DuckDB ATTACH support), per-session, never persistent.
+DuckDB is always the staging layer. Postgres is the relational truth. Neo4j is the relationship truth. LadybugDB is scratch paper — per-session, never persisted.
 
-**The `dt-brain` CLI** provisions everything: `dt-brain create brigid` stands up both databases, applies schemas, registers domains. `dt-brain health` checks all brains. `dt-brain psql brigid` and `dt-brain cypher brigid` drop you into the right shell.
+### The `dt-brain` CLI
+
+Provisioning is automated. `dt-brain create brigid` stands up both databases, applies schemas via domain resolution, and registers domains in `brain.modules`. Rollback on failure — if Neo4j setup fails, the Postgres database created in the prior step is dropped.
+
+```
+dt-brain create <name>     Provision Postgres + Neo4j, apply schemas
+dt-brain drop <slug>       Destroy a brain
+dt-brain ls                List all brains with status and sizes
+dt-brain health            Health checks across all stores
+dt-brain psql <slug>       Open psql with correct connection
+dt-brain cypher <slug>     Open cypher-shell with correct database
+dt-brain migrate <slug>    Apply pending migrations (both stores)
+```
+
+Schema management: Postgres via [Atlas](https://atlasgo.io/) (declarative HCL → generated SQL). Neo4j via `neo4j-migrations` (versioned `.cypher` files: `V{NNN}__{description}.cypher`).
 
 ---
 
-## Brigid's Knowledge Graph
+## Brain Domains
 
-The Neo4j brain at `cm-brigid-dev-neo4j` holds the complete Godot 4.6.1 API surface.
+Domains are reusable knowledge modules. Each is a Postgres schema + optional Neo4j migrations + optional ingestion scripts. Agents declare which domains they need in `brain.yaml`; the CLI applies them in order (`brain` always first).
+
+Source: [`dreamteam-hq/brain-domains`](https://github.com/dreamteam-hq/brain-domains)
+
+### All Domains
+
+| Domain | Schema | Description | Used By |
+|--------|--------|-------------|---------|
+| `brain` | `brain` | Shared infrastructure — query ledger, watermark, module registry | All agents |
+| `gamedev` | `gamedev` | Godot 4.6 API surface, design patterns, learning corpus refs | Brigid |
+| `git-history` | — | Git commit, branch, tag history | Brigid, Iris |
+| `gharchive` | `gharchive` | GitHub Archive event ingestion (21 typed tables) | Iris |
+| `github-project` | `github_project` | GitHub Projects v2 — issues, PRs, comments, board state | Iris |
+| `plugin-ecosystem` | `plugin_ecosystem` | Plugin catalog — skills, commands, agents, MCP servers | Docent |
+| `packmind` | `packmind` | Legal case management — documents, entities, timeline, evidence | Den Mother |
+
+### `brain` Domain (always applied first)
+
+Three tables every brain gets:
+
+```sql
+brain.query_ledger   -- audit trail: domain, operation, query, execution_time_ms, rows_affected
+brain.watermark      -- incremental ingestion cursors: (domain, key) → value
+brain.modules        -- schema registry: domain, schema_name, version, schema_hash
+```
+
+### `gamedev` Domain (Brigid's primary)
+
+Seven tables for game development knowledge:
+
+```sql
+gamedev.godot_class      -- class hierarchy: name, parent_class, category, is_virtual, api_type
+gamedev.godot_method     -- methods: class_id FK, name, return_type, args_json (JSONB), is_virtual, is_static
+gamedev.godot_signal     -- signals: class_id FK, name, args_json (JSONB)
+gamedev.godot_property   -- properties: class_id FK, name, type, default_value, setter, getter
+gamedev.godot_enum       -- enums: class_id FK (nullable for globals), name, values_json (JSONB)
+gamedev.design_pattern   -- game patterns: name, category, description, example_code, applicable_systems[]
+gamedev.corpus_reference -- learning corpus pointers: manifest_key, title, domain, tags[], source_repo
+```
+
+### Brigid's `brain.yaml`
+
+```yaml
+name: brigid
+type: gamedev
+domains:
+  - gamedev
+  - git-history
+stores:
+  graph: neo4j
+  relational: postgres
+  ephemeral_graph: ladybug
+  ephemeral_relational: duckdb
+```
+
+Domain resolution order is always `["brain"] + agent_domains` → `["brain", "gamedev", "git-history"]`.
+
+---
+
+## Knowledge Graph: Godot 4.6.1 API Surface
+
+The Neo4j brain at `cm-brigid-dev-neo4j` holds the complete Godot 4.6.1 API.
 
 ![Neo4j Godot API Schema](diagrams/neo4j-schema.png)
 
 **Scale:** 44,000 nodes, 74,000 relationships.
 
-**How it got there:** Matt wrote `scripts/load-godot-neo4j.py` — a deterministic pipeline that reads `extension_api.4.6.1.json` (the Godot build artifact that defines every class, method, property, signal, and enum) and emits Cypher to construct the graph. No LLM involved. The API spec is the source of truth, not documentation or training data.
+**Ingestion:** `scripts/load-godot-neo4j.py` reads `extension_api.4.6.1.json` — the Godot build artifact that defines every class, method, property, signal, and enum — and emits Cypher. Deterministic pipeline. No LLM calls. The API spec is the source of truth.
 
-**Schema:**
+**Node labels and counts:**
 
+| Label | Count | Description |
+|-------|-------|-------------|
+| `Type` | 1,800 | Godot classes (Node, CharacterBody3D, etc.) |
+| `Method` | 16,461 | Class methods |
+| `Parameter` | 16,314 | Method parameters |
+| `EnumValue` | 4,868 | Individual enum members |
+| `Property` | 4,055 | Class properties |
+| `Signal` | 489 | Signals emitted by classes |
+| `Namespace` | 1 | Root namespace |
+| `ApiSurface` | 1 | Root node |
+
+**Relationship types:**
+
+| Relationship | Count | Connects |
+|-------------|-------|----------|
+| `OF_TYPE` | 18,797 | Parameter → Type |
+| `HAS_METHOD` | 16,461 | Type → Method |
+| `HAS_PARAMETER` | 16,314 | Method → Parameter |
+| `RETURNS_TYPE` | 7,854 | Method → Type |
+| `HAS_ENUM_VALUE` | 4,868 | Type → EnumValue |
+| `HAS_PROPERTY` | 4,055 | Type → Property |
+| `BELONGS_TO` | 1,800 | Type → ApiSurface |
+| `IN_NAMESPACE` | 1,800 | Type → Namespace |
+| `INHERITS` | 1,023 | Type → Type (parent) |
+| `DEFINES_ENUM` | 736 | Type → Type (enum) |
+| `HAS_SIGNAL` | 489 | Type → Signal |
+
+**Example queries:**
+
+Full inheritance chain for `CharacterBody3D`:
+```cypher
+MATCH path = (c:Type {name: 'CharacterBody3D'})-[:INHERITS*]->(ancestor:Type)
+RETURN [n IN nodes(path) | n.name] AS chain
 ```
-(:ApiSurface)─[:BELONGS_TO]→(:Type)      1,800 types (classes)
-(:Type)─[:HAS_METHOD]→(:Method)           16,461 methods
-(:Method)─[:HAS_PARAMETER]→(:Parameter)   16,314 parameters
-(:Method)─[:RETURNS_TYPE]→(:Type)         7,854 return type edges
-(:Type)─[:HAS_PROPERTY]→(:Property)       4,055 properties
-(:Type)─[:HAS_SIGNAL]→(:Signal)           489 signals
-(:Type)─[:DEFINES_ENUM]→(:Type)           736 enums
-(:Type)─[:HAS_ENUM_VALUE]→(:EnumValue)    4,868 enum values
-(:Type)─[:INHERITS]→(:Type)               1,023 inheritance edges
-(:Type)─[:IN_NAMESPACE]→(:Namespace)      namespace membership
-(:Parameter)─[:OF_TYPE]→(:Type)           18,797 type reference edges
+
+All signals a type can emit (including inherited):
+```cypher
+MATCH (t:Type {name: 'CharacterBody3D'})-[:INHERITS*0..]->(ancestor:Type)-[:HAS_SIGNAL]->(s:Signal)
+RETURN ancestor.name AS defined_on, s.name AS signal
 ```
 
-**What this enables:** When I need to know what methods `CharacterBody3D` inherits from `PhysicsBody3D` from `CollisionObject3D` from `Node3D` from `Node`, I traverse the graph. When I need all signals a node type can emit — including inherited ones — it's a Cypher query, not a documentation lookup. The graph is authoritative in a way that training data and documentation never are.
-
-**Postgres complement:** The `gamedev` schema holds the same data in tabular form — `godot_class`, `godot_method`, `godot_signal`, `godot_property`, `godot_enum`. SQL for aggregations and counts, Cypher for traversals and relationships.
+**Postgres complement:** The `gamedev` schema holds the same data in tabular form. SQL for "how many methods does Node3D have?" Cypher for "what's the full inheritance chain and what signals does each ancestor define?"
 
 ---
 
@@ -142,112 +194,93 @@ Skills are markdown files following the [agentskills.io](https://agentskills.io)
 | **.NET/C#** | 15 | `dotnet-csharp`, `dotnet-source-generators`, `roslyn-analyzers`, `system-reactive-dynamicdata`, `dotnet-editorconfig` |
 | **Architecture** | 3 | `concurrency-model-selection`, `crystal-magica-architecture`, `numerical-pitfalls` |
 
-The `crystal-magica-architecture` skill is the project-specific one — it knows the solution structure, the MVVM pattern, the movement protocol, the source generators, and the key types.
+### Key Skills in Detail
+
+**`gamedev-godot`** — Primary skill. Godot 4.6 + C#/.NET 10: scene authoring, node hierarchy, signals, physics, networking, and the Godot MCP server workflow. Loaded first in every game dev session.
+
+**`crystal-magica-architecture`** — Project-specific. Solution structure, MVVM pattern, movement protocol, source generators, key type relationships.
+
+**`godot-gdextension-csharp`** — The C++ ↔ C# boundary for ObservableGodot. C-ABI interop, `extension_api.json` usage, tier architecture (C++ interceptors → managed data fabric → Parquet output).
+
+**`dotnet-source-generators`** — Incremental Source Generators (Roslyn, .NET 10). CrystalMagica uses a source generator for message routing — this skill knows the IIncrementalGenerator API, diagnostic reporting, and Godot-specific generator patterns.
+
+**`numerical-pitfalls`** — IEEE 754 gotchas, fixed-point arithmetic, large-world precision, physics stability, PRNG for games. Loaded when floating-point or determinism questions come up.
 
 ---
 
-## MCP Servers: The Tool Layer
-
-Nine MCP servers, 120+ tools total.
+## MCP Servers: 9 Servers, 120+ Tools
 
 | Server | Tools | What It Does |
 |--------|-------|-------------|
-| **Godot MCP** | 15 intelligence tools | Live scene manipulation, script analysis, runtime diagnostics, binding audits — running inside the Godot editor |
-| **Roslyn MCP** | 41 tools | Semantic C# refactoring: rename, extract method, find references, analyze data flow, get diagnostics. IDE-grade operations without an IDE. |
-| **Blender MCP** | 22 tools | 3D asset pipeline: AI mesh gen (Hyper3D, Hunyuan3D), PolyHaven/Sketchfab asset search, Blender scene control |
-| **NuGet MCP** | 6 tools | Package version management, vulnerability scanning, source mapping |
-| **Context7** | 2 tools | Live documentation lookup for any library — bypasses training data staleness |
-| **Mermaid MCP** | 2 tools | Diagram rendering |
-| **Neo4j** | Cypher read/write | Knowledge graph queries |
-| **Postgres** | SQL query | Structured data queries |
-| **DuckDB** | SQL query | Analytics, file exploration, YAML/markdown parsing |
+| **Godot MCP** | 15 | Runs inside the Godot editor. Live scene manipulation, script analysis, runtime diagnostics, C# binding audits. `intelligence_project_state` is the first call in any session — compile errors, runtime errors, .NET project references. |
+| **Roslyn MCP** | 41 | Semantic C# operations: `get_diagnostics`, `find_references`, `find_implementations`, `extract_method`, `rename_symbol`, `analyze_data_flow`, `search_symbols`. IDE-grade refactoring without an IDE. |
+| **Blender MCP** | 22 | 3D asset pipeline: AI mesh generation (Hyper3D Rodin, Hunyuan3D), PolyHaven/Sketchfab asset search and download, Blender scene control, material/texture management. |
+| **NuGet MCP** | 6 | `get_latest_package_version`, `upgrade_packages_to_latest`, `fix_vulnerable_packages`, source mapping generation. |
+| **Context7** | 2 | `resolve-library-id` + `query-docs`. Live documentation lookup for any library — React, Godot, .NET, anything. Bypasses training data staleness. |
+| **Mermaid MCP** | 2 | `mermaid_preview` + `mermaid_save`. Render diagrams to PNG/SVG/PDF. |
+| **Neo4j** | read/write | Cypher queries against `cm-brigid-dev-neo4j`. Knowledge graph access. |
+| **Postgres** | query | SQL against `cm-brigid-dev-postgres`. Structured data access. |
+| **DuckDB** | query | SQL with `yaml` and `markdown` extensions preloaded. `read_yaml()`, `read_markdown()`, `read_yaml_frontmatter()` for file exploration. Cross-brain federation via `ATTACH 'postgresql://...'`. |
 
-When Matt's `.editorconfig` enforces all CA rules at ERROR severity, Roslyn's `get_diagnostics` catches violations before Matt sees them. `search_symbols` is authoritative where training data is not — if Roslyn can't find the method, it doesn't exist.
+### Roslyn MCP Tool Categories
 
----
+The 41 Roslyn tools break down into:
 
-## Rules of Engagement
-
-These aren't suggestions. They're enforced through agent memory, `.editorconfig` severity, and Matt's direct feedback. They exist because Matt corrected me — usually more than once.
-
-**Code rules:**
-- `.editorconfig` at ERROR severity. No pragmas — ever. Fix the code, don't suppress the warning.
-- Match existing style to an OCD level. Not "close enough" — exactly.
-- `var` everywhere. Block-scoped namespaces. No space before parens in control flow.
-- Verify APIs against `extension_api.json` / Context7 / Roslyn before asserting they exist.
-
-**Workflow rules:**
-- **Never push, commit, or PR in KervanaLLC/CrystalMagica.** Write files to disk. Matt handles all git operations.
-- **Design gate:** First deliverable is a design summary + checklist. Wait for feedback. Then code. Then layered review (design soundness first, code quality second).
-- **No scope creep.** If Matt didn't ask for it, don't add it.
-- **Matt-voice in docs.** Design docs read like Matt wrote them. No agent identity, no self-reference, no AI tells.
-- **Model selection is intentional.** Haiku for mechanical tasks, Sonnet for analysis, Opus for complex synthesis. Never vanilla.
-
-**Design rules:**
-- Matt pivots freely. Don't defend prior work. Match the new directive literally.
-- Never defer work Matt told you to do, even if a future plan would replace it.
-- When Matt says "explain it to a teenager" — he means it. Simplify until it's obvious.
+| Category | Tools |
+|----------|-------|
+| **Analysis** | `diagnose`, `get_diagnostics`, `analyze_control_flow`, `analyze_data_flow`, `get_code_metrics` |
+| **Navigation** | `go_to_definition`, `find_references`, `find_implementations`, `find_callers`, `get_symbol_info`, `get_type_hierarchy`, `get_document_outline`, `search_symbols` |
+| **Refactoring** | `rename_symbol`, `extract_method`, `extract_variable`, `extract_constant`, `extract_interface`, `extract_base_class`, `implement_interface`, `encapsulate_field`, `change_signature`, `introduce_parameter`, `inline_variable`, `move_type_to_file`, `move_type_to_namespace` |
+| **Generation** | `generate_constructor`, `generate_equals_hashcode`, `generate_tostring`, `generate_overrides` |
+| **Cleanup** | `add_missing_usings`, `remove_unused_usings`, `sort_usings`, `format_document`, `add_null_checks` |
+| **Conversion** | `convert_to_async`, `convert_to_interpolated_string`, `convert_to_pattern_matching`, `convert_property`, `convert_expression_body`, `convert_foreach_linq` |
 
 ---
 
-## Design Partnership: The Evidence
+## The Ecosystem
 
-This section uses direct quotes from session logs. 7 major design sessions, 400+ steering corrections, across 8 weeks of CrystalMagica development.
+![DreamTeams Ecosystem](diagrams/ecosystem-map.png)
 
-### The collaboration pattern
+| Agent | Domain | Brain Domains | Skills | Key MCP Servers |
+|-------|--------|---------------|--------|-----------------|
+| **Brigid** | Game dev — Godot 4.6 C#, .NET 10, MMO | `gamedev`, `git-history` | 48 | Godot, Roslyn, Blender, NuGet, Context7 |
+| **Iris** | PM — boards, epics, multi-project | `gharchive`, `github-project`, `git-history` | 50 | GitHub GraphQL, neo4j, postgres |
+| **Docent** | Ecosystem curator — catalog, registry | `plugin-ecosystem` | 16 | docent MCP, neo4j, postgres |
+| **Den Mother** | Legal ops — MA custody litigation | `packmind` | 63 | packmind, courtlistener, slack |
 
-Matt described it himself in a session summary for Arthur:
+---
+
+## Learning Corpus
+
+Two repos feed domain knowledge into agent brains.
+
+**[`dreamteam-hq/learning`](https://github.com/dreamteam-hq/learning)** — Domain-first curated knowledge base. 7 domains: graph, ML, distributed-systems, data-engineering, python, observability, devtools. Each domain subdivided by content type (docs, books, papers, videos, talks, code). Includes ingestion skills: `corpus-manifest`, `book-ingest`, `youtube-ingest`, `github-history`, `graph-promote`. Managed by Iris with 2-week sprints on the GitHub project board.
+
+**[`dreamteam-hq/learning-corpus`](https://github.com/dreamteam-hq/learning-corpus)** — The raw and curated content. Currently seeded with:
+- Neo4j Graph Data Science Manual v2.27 (183 pages)
+- Slack API Documentation (2,534 pages — full SDK, Block Kit, Bolt)
+
+Each source carries `_source.yaml` metadata: type, URL, scrape date, topics, license, quality rating.
+
+Content is topic-first, versioned, and machine-indexed via `MANIFEST.jsonl` (queryable with grep, jq, or DuckDB). The `gamedev.corpus_reference` table in Brigid's Postgres brain links corpus entries to game development contexts — design patterns, Godot API documentation, .NET architecture references.
+
+The pipeline: raw content lands in `learning-corpus` → ingestion scripts in `learning` extract + shape → promote to agent brain (Postgres tables + Neo4j nodes). Same deterministic-first pattern as the API surface ingestion.
+
+---
+
+## Design Partnership
+
+The combat resolver built in this session is a concrete example. Four algorithm pivots in one conversation:
+
+1. Cumulative distribution function — floating point thresholds, normalization loop
+2. Matt: "I find this extremely confusing"
+3. Research agents (dev + teacher) independently converge on the same answer
+4. Shipped [fitness proportionate selection](https://en.wikipedia.org/wiki/Fitness_proportionate_selection) — expand weights into a flat array, pick a random index
+
+Along the way: startup validation added then removed ("scope creep"), tuples replaced with record structs, lock removed in favor of `ConcurrentDictionary.TryRemove`. Each change driven by Matt's feedback, informed by Brigid's knowledge of .NET patterns and game server architecture.
+
+459 design pivots across 7 sessions. The pattern: agent proposes, engineer steers.
 
 > "Arthur's concern about AI hurting coding skills is valid if you use it as 'jesus take the wheel.' I use it as a fast but unreliable intern who needs every line reviewed."
-
-The pattern, consistently, is: agent proposes → Matt tests or reads → Matt corrects on 3-5 axes (scope, naming, voice, architecture, runtime behavior) → agent revises. Not "describe what you want and paste the output."
-
-### Per-feature iteration history
-
-| Feature | Sessions | Design Pivots | Key Pivot |
-|---------|----------|---------------|-----------|
-| Controller composition | 1 (Mar 25-26) | 102 | Design doc went through v1→v4. "don't keep referring to previous versions. KISS." |
-| Multiplayer protocol | 1 (Mar 30) | 56 | "no scope creep" (5x). Ripped out all added tests. |
-| Down-jump platforms | 1 (Apr 7-8) | 37 | Subclass hierarchy → single bool. "subclassing seems brittle. consider traits." |
-| Loop 2 server entities | 1 (Apr 2) | 103 | Full design reset. "I don't trust your prior design or work." |
-| Platform simplification | 1 (Apr 9-13) | 47 | 174 lines + 3 files → 95 lines + 1 file. "Do we actually need all these helpers?" |
-| Attack system | 1 (Apr 20-22) | 84 | PR body rewritten 3x. "in my voice, not yours." |
-| Combat resolver | 1 (Apr 23-24) | 30+ | CDF → bag-of-marbles. "I hate this." "ValidateCompleteness is scope creep." |
-| **Total** | **7** | **459+** | |
-
-### Representative quotes
-
-**Naming as architecture signal:**
-> "I hate that CharacterAction is being repurposed, what's a better name?"
 >
-> "I hate djp for a variable name. djPlat works."
->
-> "'mat' should be a descriptive name. Clarity is more important than fewer chars. 'single character variable names don't run faster.'"
-
-Each naming dispute surfaced an underlying design concern — wrong abstraction, wrong scope, wrong audience.
-
-**Architecture simplification:**
-> "nope...using subclassing seems brittle. consider 'traits' in the C++ iostreams library, or a 'mixin' pattern. what if I want a platform where the spans have other properties, such as lava, or making them slippery."
-
-This directly led to collapsing a 3-file subclass hierarchy into a single `[Export] public bool CanDropThrough` property.
-
-**Algorithmic iteration (this session):**
-The combat resolver went through 4 major algorithm pivots in one session:
-1. Started with cumulative distribution function (CDF) — floating point thresholds
-2. Matt found it confusing: "explain BuildTables to me" → still confused → "I find this extremely confusing"
-3. Consulted a dev agent + teacher agent — both converged on bag-of-marbles
-4. Shipped [fitness proportionate selection](https://en.wikipedia.org/wiki/Fitness_proportionate_selection): expand weights into a flat array, pick a random index. No floats, no normalization, one line to roll.
-
-Along the way: startup validation was added by a review agent, then Matt removed it ("ValidateCompleteness is scope creep"). Tuples were replaced with record structs because of "tuple-trauma from Python." The lock was removed because "it isn't task/async friendly."
-
-**Runtime testing drives design:**
-> "I tested, once the mesh is out you can't change directions. We should have some way to indicate which way we're facing."
-
-At least three design changes came from Matt running the game and observing behavior — not from code review. Agent-proposed code compiled but failed at runtime. The design gate exists because of this pattern.
-
-**Voice ownership:**
-> "This sounds like AI wrote it. Re-write this, I would never have all the specific types and files. The Commits section should be in my voice, not yours."
-
-Said about a PR description. Said about design docs. Said about this very document's first draft ("too many words, don't highlight and reference specific methods as if they already exist").
-
-459 steering corrections across 7 sessions. The agent proposes, the engineer decides.
+> — Matt, session summary for Arthur
