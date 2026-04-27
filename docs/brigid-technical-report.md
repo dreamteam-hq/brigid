@@ -182,30 +182,6 @@ RETURN ancestor.name AS defined_on, s.name AS signal
 
 ---
 
-## Skills: 48 Across 5 Domains
-
-Skills are markdown files following the [agentskills.io](https://agentskills.io) spec — frontmatter (name, triggers, depth) plus a body that teaches domain knowledge. They load on-demand when conversation triggers match.
-
-| Domain | Count | Examples |
-|--------|-------|---------|
-| **Godot Engine** | 12 | `gamedev-godot`, `godot-scene-patterns`, `godot-signals-csharp`, `godot-gdextension-csharp`, `godot-dotnet-mcp` |
-| **Game Design** | 11 | `gamedev-ecs`, `gamedev-3d-platformer`, `gamedev-3d-ai`, `gamedev-blender`, `game-economy-design` |
-| **Multiplayer/MMO** | 7 | `gamedev-multiplayer`, `gamedev-server-architecture`, `mmo-zone-architecture`, `mmo-action-relay` |
-| **.NET/C#** | 15 | `dotnet-csharp`, `dotnet-source-generators`, `roslyn-analyzers`, `system-reactive-dynamicdata`, `dotnet-editorconfig` |
-| **Architecture** | 3 | `concurrency-model-selection`, `crystal-magica-architecture`, `numerical-pitfalls` |
-
-### Key Skills in Detail
-
-**`gamedev-godot`** — Primary skill. Godot 4.6 + C#/.NET 10: scene authoring, node hierarchy, signals, physics, networking, and the Godot MCP server workflow. Loaded first in every game dev session.
-
-**`crystal-magica-architecture`** — Project-specific. Solution structure, MVVM pattern, movement protocol, source generators, key type relationships.
-
-**`godot-gdextension-csharp`** — The C++ ↔ C# boundary for ObservableGodot. C-ABI interop, `extension_api.json` usage, tier architecture (C++ interceptors → managed data fabric → Parquet output).
-
-**`dotnet-source-generators`** — Incremental Source Generators (Roslyn, .NET 10). CrystalMagica uses a source generator for message routing — this skill knows the IIncrementalGenerator API, diagnostic reporting, and Godot-specific generator patterns.
-
-**`numerical-pitfalls`** — IEEE 754 gotchas, fixed-point arithmetic, large-world precision, physics stability, PRNG for games. Loaded when floating-point or determinism questions come up.
-
 ---
 
 ## MCP Servers: 9 Servers, 120+ Tools
@@ -268,25 +244,89 @@ The pipeline: raw content lands in `learning-corpus` → ingestion scripts in `l
 
 ---
 
-## Foundational Learnings
+## Skills: Deep Catalog
 
-Brigid's skills and behavioral rules didn't emerge from a design doc. They were extracted from real engineering sessions in the original `dev-cm` workspace (March 2026), before Brigid existed as a named agent. That workspace — `halcyondude/dev-cm` — contains 4 iterations of a controller composition design doc, session summaries, architecture debates, and a catalog of mistakes that became rules.
+42 skills organized by domain. Each is a markdown file following the [agentskills.io](https://agentskills.io) spec — frontmatter (name, triggers, depth) plus domain knowledge. Loaded on-demand when conversation triggers match. Four skills carry `references/` subdirectories with supplemental depth material.
 
-### Controller composition: send input, not physics results
+### .NET / C# — Language and Tooling (9 skills)
 
-Remote characters froze between input transitions because the client sent position updates only on state changes. Four design iterations over two days converged on one axiom: **transmit input, replay physics on both sides.** Local `InputController` captures keypresses → server relays `IInputState` → remote `NetworkInputController` feeds the same `MovementController`. Identical input → identical physics → no teleport.
+| Skill | What It Teaches |
+|-------|----------------|
+| `dotnet-csharp` | C# 14 / .NET 10 features: primary constructors, collection expressions, `field` keyword, extension members, records, pattern matching, spans |
+| `dotnet-project-structure` | `.slnx` solutions, `Directory.Build.props`, central package management via `Directory.Packages.props`, global usings |
+| `dotnet-editorconfig` | Canonical `.editorconfig` template — naming rules, CA diagnostic severities, framework-specific suppressions |
+| `dotnet-scripts` | Standalone `#!/usr/bin/env dotnet` C# scripts with `#:package` syntax and SDK quirks |
+| `dotnet-cross-platform` | Prefer `System.Diagnostics` and `System.Net` APIs over shell commands for portable code |
+| `dotnet-source-generators` | Roslyn incremental source generators (`IIncrementalGenerator`) for .NET 10 and Godot 4.x |
+| `roslyn-analyzers` | Custom `DiagnosticAnalyzer`, `CodeFixProvider`, and `CodeRefactoringProvider` implementation |
+| `dotnet-spectre-console` | Spectre.Console markup, `CommandApp`, live display, TUI dashboards |
+| `numerical-pitfalls` | IEEE 754 gotchas, fixed-point arithmetic, large-world precision, physics stability, PRNG for games |
 
-Arthur and Matt then debated whether this was even the right direction. Arthur's argument: once you see idle as a type of movement and jump as vertical movement, the three-codepath action model collapses back to a single update shape — which is `CharacterPositionUpdate` again. Same data on the wire, net complexity increase. Matt's counter: the mechanism is different even if the wire shape reconverges. Before: physics results transmitted, client approximated. Now: commands transmitted, client replays through actual physics. The MVVM split and shared base class are structural improvements. The debate is documented in the March 29 blog post.
+### .NET / C# — Architecture Patterns (8 skills)
 
-### Subclass hierarchy → single bool
+| Skill | What It Teaches |
+|-------|----------------|
+| `dotnet-dependency-injection` | Service lifetimes, keyed services, decorator pattern via Scrutor, captive dependency pitfalls |
+| `dotnet-error-handling` | Result pattern for expected failures, ProblemDetails (RFC 9457) for API errors, FluentValidation |
+| `dotnet-logging` | Serilog structured events, OpenTelemetry traces + metrics, health check endpoints, correlation IDs |
+| `dotnet-testing` | xUnit v3, `WebApplicationFactory`, Testcontainers for real DB testing, Verify snapshots, AAA pattern |
+| `dotnet-mvvm-backend` | MVVM as a game client architecture — System.Reactive ViewModels driving Godot node Views |
+| `system-reactive-dynamicdata` | Rx pipelines, DynamicData SourceCache, collection binding to Godot node lifecycle without leaks. **Has `references/advanced-patterns.md`** |
+| `dotnet-gameserver-hosting` | .NET Generic Host with `BackgroundService` tick loops, DI wiring, graceful shutdown, WebSocket hosting |
+| `concurrency-model-selection` | Decision framework: CSP vs actors vs async/await vs structured concurrency by problem shape |
 
-Down-jump platforms started as a `DownJumpPlatformNode` subclass with a parallel `DownJumpSection` helper — 174 lines across 3 files. The architectural challenge: "what if I want a platform where the spans have other properties, such as lava, or making them slippery?" Subclassing is the wrong extension model. Collapsed to `[Export] public bool CanDropThrough` on the base `PlatformNode`. 95 lines, 1 file. Platform detection moved from per-platform `Area3D` to per-player `GetSlideCollision()`.
+### Godot Engine (8 skills)
 
-### Continuous state vs. discrete actions
+| Skill | What It Teaches |
+|-------|----------------|
+| `gamedev-godot` | Primary skill. Godot 4.6 C# scene authoring, node hierarchy, signals, physics, MCP workflow |
+| `godot-scene-patterns` | Scenes vs code-created nodes, PackedScene instantiation, node ownership, scene tree lifecycle |
+| `godot-signals-csharp` | Typed C# signal delegates, signal bus pattern, cross-scene communication, Rx integration |
+| `godot-input-system` | InputMap action names (never raw keycodes), hybrid polling + events, multiplayer input routing |
+| `godot-networking-custom` | Custom WebSocket + binary serialization networking stack — bypasses Godot's MultiplayerAPI |
+| `godot-dotnet-mcp` | Every tool in the Godot .NET MCP server: live project state, scene patching, C# binding audits |
+| `godot-gdextension-csharp` | C++ ↔ C# interop via C-ABI for ObservableGodot — managed/native boundary, `extension_api.json` |
+| `observable-godot-architecture` | Three-tier pipeline: C++ GDExtension interceptors → .NET data fabric → Parquet output |
 
-PR #79 (March 29 pairing session) flipped the networking model. `PlayerNode` went from 141 lines of tangled input/physics/networking to a 60-line physics-only base class with `IInputAction` interface. Two subclasses: `LocalPlayerNode` (polls input, sends actions) and `RemotePlayerNode` (subscribes via Rx `Subject<CharacterAction>`). The question that drove the debate: does the wire carry what happened (actions) or where things are (state)? CrystalMagica carries actions. The server is authoritative over outcomes.
+### Game Design and Systems (6 skills)
 
-### Combat resolver: CDF → bag of marbles
+| Skill | What It Teaches |
+|-------|----------------|
+| `gamedev-3d-platformer` | CharacterBody3D movement, gravity, jump-cut mechanics, sidescroller Z-clamping, collision layers |
+| `gamedev-ecs` | ECS architecture — archetype vs sparse set storage, system scheduling, component queries, Bevy/Flecs |
+| `gamedev-2d-ui` | Game UI in Godot 4: health bars, inventory, dialog, damage numbers, menus, multiplayer nameplates |
+| `gamedev-3d-ai` | Server-authoritative enemy AI via BackgroundService FSMs broadcasting actions to clients |
+| `gamedev-level-design` | Metroidvania structure, ability-gated progression, embedded tutorials, data-driven content |
+| `game-economy-design` | MMO economy: currency systems, sink/faucet balance, inflation control, auction houses, exploit detection |
 
-The damage rolling algorithm went through four pivots in one session. Cumulative distribution function with floating-point normalization → Matt couldn't follow it → research agents independently converged on [fitness proportionate selection](https://en.wikipedia.org/wiki/Fitness_proportionate_selection). Expand weights into a flat `int[]`, pick a random index. No floats, no normalization. The startup validation that a review agent added was removed as scope creep. The lock was removed because `ConcurrentDictionary.TryRemove` already handles the death race.
+### 3D Art and Assets (3 skills)
+
+| Skill | What It Teaches |
+|-------|----------------|
+| `gamedev-blender` | Blender MCP: AI mesh gen (Hyper3D Rodin, Hunyuan3D), PolyHaven/Sketchfab search, glTF export |
+| `gamedev-3d-art-pipeline` | Blender → Godot via `.glb`/`.gltf`, PBR materials, LOD, mesh optimization, procedural mesh |
+| `procedural-generation-3d` | Terrain (heightmap + noise), layouts (BSP, WFC), loot tables, biomes, seed sync for multiplayer |
+
+### Multiplayer and MMO (5 skills)
+
+| Skill | What It Teaches |
+|-------|----------------|
+| `gamedev-multiplayer` | Multiplayer architecture models, client prediction, server reconciliation, lag compensation |
+| `gamedev-server-architecture` | Headless .NET game server: fixed-timestep tick loop, dual TCP/UDP, SignalR lobbies. **Has 4 reference files:** `networking.md`, `serialization.md`, `signalr.md`, `tick-engine.md` |
+| `mmo-action-relay` | Server-authoritative action relay: clients send intent, server validates, stamps, and broadcasts |
+| `mmo-zone-architecture` | Scaling from single-zone MapHub to multi-zone AoI filtering, instancing, and load balancing |
+| `gamedev-mmo-persistence` | Full MMO data layer: accounts, inventories, guilds, quests, leaderboards, chat, live migration. **Has `references/schema-and-sql.md`** |
+
+### Deployment (1 skill)
+
+| Skill | What It Teaches |
+|-------|----------------|
+| `gamedev-deployment` | Godot export presets (PC/mobile/web/headless), Steam/Steamworks, CI/CD with GitHub Actions, delta patching, live ops, analytics. **Has `references/ci-cd-workflows.md`** |
+
+### Project-Specific (2 skills)
+
+| Skill | What It Teaches |
+|-------|----------------|
+| `crystal-magica-architecture` | CrystalMagica solution: 5 projects, their roles, MVVM binding model, movement protocol, source generators |
+| `brigid-voice` | Output conventions: fire emoji, direct technical voice, action-first, tables for decisions |
 
