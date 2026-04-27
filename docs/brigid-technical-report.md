@@ -272,66 +272,21 @@ The pipeline: raw content lands in `learning-corpus` → ingestion scripts in `l
 
 Brigid's skills and behavioral rules didn't emerge from a design doc. They were extracted from real engineering sessions in the original `dev-cm` workspace (March 2026), before Brigid existed as a named agent. That workspace — `halcyondude/dev-cm` — contains 4 iterations of a controller composition design doc, session summaries, architecture debates, and a catalog of mistakes that became rules.
 
-### What the original workspace produced
+### Controller composition: send input, not physics results
 
-The controller composition problem: `RemotePlayerNode.SetServerPosition()` teleported directly to server position. Packets only arrived on input transitions. Between transitions, remote characters froze. The fix required rethinking the entire input→physics→network pipeline.
+Remote characters froze between input transitions because the client sent position updates only on state changes. Four design iterations over two days converged on one axiom: **transmit input, replay physics on both sides.** Local `InputController` captures keypresses → server relays `IInputState` → remote `NetworkInputController` feeds the same `MovementController`. Identical input → identical physics → no teleport.
 
-Four plan iterations over two days:
+Arthur and Matt then debated whether this was even the right direction. Arthur's argument: once you see idle as a type of movement and jump as vertical movement, the three-codepath action model collapses back to a single update shape — which is `CharacterPositionUpdate` again. Same data on the wire, net complexity increase. Matt's counter: the mechanism is different even if the wire shape reconverges. Before: physics results transmitted, client approximated. Now: commands transmitted, client replays through actual physics. The MVVM split and shared base class are structural improvements. The debate is documented in the March 29 blog post.
 
-| Version | What changed |
-|---------|-------------|
-| v1 | `IInputSource` interface, three controller types |
-| v2 | Added `IntentController` middle layer, then removed it — too many layers for part 1 |
-| v3 | Added `.editorconfig` conventions, exact C# signatures, restored `NetworkInputController` as a separate type (AI had collapsed it back into a mode) |
-| v4 / DRAFT | Final design doc submitted for Arthur's review |
+### Subclass hierarchy → single bool
 
-The design axiom that survived all iterations: **send input, not physics results.** Local `InputController` captures keypresses, sends `IInputState` to server. Server relays. Remote `NetworkInputController` applies. Both `MovementController`s see identical input → identical physics → no teleport.
+Down-jump platforms started as a `DownJumpPlatformNode` subclass with a parallel `DownJumpSection` helper — 174 lines across 3 files. The architectural challenge: "what if I want a platform where the spans have other properties, such as lava, or making them slippery?" Subclassing is the wrong extension model. Collapsed to `[Export] public bool CanDropThrough` on the base `PlatformNode`. 95 lines, 1 file. Platform detection moved from per-platform `Area3D` to per-player `GetSlideCollision()`.
 
-### Architecture errors caught during these sessions
+### Continuous state vs. discrete actions
 
-Each of these became a behavioral rule or skill improvement:
+PR #79 (March 29 pairing session) flipped the networking model. `PlayerNode` went from 141 lines of tangled input/physics/networking to a 60-line physics-only base class with `IInputAction` interface. Two subclasses: `LocalPlayerNode` (polls input, sends actions) and `RemotePlayerNode` (subscribes via Rx `Subject<CharacterAction>`). The question that drove the debate: does the wire carry what happened (actions) or where things are (state)? CrystalMagica carries actions. The server is authoritative over outcomes.
 
-- AI derived input by reverse-engineering velocity. Correction: input state travels on the wire directly.
-- AI collapsed `NetworkInputController` into a mode on `InputController`. Correction: two separate classes, same interface.
-- AI used pure event-driven input (`_UnhandledInput` only). Correction: Godot docs recommend hybrid polling + events.
-- AI added `FaceDirection.None`. Correction: a character always faces left or right. No null direction.
-- AI proposed `PlayerIntention` middleware for part 1. Correction: too many layers — move to Futures, keep the slot open.
+### Combat resolver: CDF → bag of marbles
 
-### Arthur's code rules (became `.editorconfig` + agent memory)
-
-After PR #42 merged with scope creep and AI slop, Arthur did a cleanup pass and established non-negotiable rules:
-
-- Full descriptive variable names — `velocity` not `vel`
-- Braces on all control flow
-- Switch expressions over chained if/else
-- `[Export]` node references instead of `GetNode<T>("path")`
-- No `#pragma warning disable` — fix the root cause
-- No AI attribution anywhere in KervanaLLC repos
-
-These rules became Brigid's `feedback_code_style.md` memory (`.editorconfig` at ERROR, no pragmas, OCD-level style matching) and `feedback_repo_push_rules.md` (never push/commit/PR to KervanaLLC).
-
-### Implementation learnings (became skills)
-
-From the `learnings.md` log in `matt-dev-cm`:
-
-| Discovery | Where it went |
-|-----------|--------------|
-| `BackgroundService` pattern — override `ExecuteAsync` only, let `OperationCanceledException` propagate | `dotnet-gameserver-hosting` skill |
-| Object pool `Rent/Remit` is for deserialization path only; server write path allocates freely at low frequency | `crystal-magica-architecture` skill |
-| `Color` record struct: positional constructor defaults A=255 (correct), object initializer defaults A=0 (transparent) | `numerical-pitfalls` skill |
-| `[Tool]` attribute doesn't propagate through inheritance; guard runtime code with `!Engine.IsEditorHint()` | `gamedev-godot` skill |
-| C# 14 `field` keyword replaces manual backing fields — only worth using when setter has real logic | `dotnet-csharp` skill |
-| `GetSlideCollision()` per-player beats `Area3D` per-platform for platform detection | `gamedev-3d-platformer` skill |
-
-### The scope creep lesson
-
-From Arthur's Slack, documented verbatim in the handoff:
-
-> Arthur: "fix ONLY the remote player smoothness regression"
->
-> Arthur: "Please solve it the one hour wrong way"
->
-> Matt: "I again scope creeped"
-
-This became the `feedback_dont_defer_without_permission.md` memory and the "no scope creep" rule enforced across every session.
+The damage rolling algorithm went through four pivots in one session. Cumulative distribution function with floating-point normalization → Matt couldn't follow it → research agents independently converged on [fitness proportionate selection](https://en.wikipedia.org/wiki/Fitness_proportionate_selection). Expand weights into a flat `int[]`, pick a random index. No floats, no normalization. The startup validation that a review agent added was removed as scope creep. The lock was removed because `ConcurrentDictionary.TryRemove` already handles the death race.
 
