@@ -266,3 +266,72 @@ Content is topic-first, versioned, and machine-indexed via `MANIFEST.jsonl` (que
 
 The pipeline: raw content lands in `learning-corpus` → ingestion scripts in `learning` extract + shape → promote to agent brain (Postgres tables + Neo4j nodes). Same deterministic-first pattern as the API surface ingestion.
 
+---
+
+## Foundational Learnings
+
+Brigid's skills and behavioral rules didn't emerge from a design doc. They were extracted from real engineering sessions in the original `dev-cm` workspace (March 2026), before Brigid existed as a named agent. That workspace — `halcyondude/dev-cm` — contains 4 iterations of a controller composition design doc, session summaries, architecture debates, and a catalog of mistakes that became rules.
+
+### What the original workspace produced
+
+The controller composition problem: `RemotePlayerNode.SetServerPosition()` teleported directly to server position. Packets only arrived on input transitions. Between transitions, remote characters froze. The fix required rethinking the entire input→physics→network pipeline.
+
+Four plan iterations over two days:
+
+| Version | What changed |
+|---------|-------------|
+| v1 | `IInputSource` interface, three controller types |
+| v2 | Added `IntentController` middle layer, then removed it — too many layers for part 1 |
+| v3 | Added `.editorconfig` conventions, exact C# signatures, restored `NetworkInputController` as a separate type (AI had collapsed it back into a mode) |
+| v4 / DRAFT | Final design doc submitted for Arthur's review |
+
+The design axiom that survived all iterations: **send input, not physics results.** Local `InputController` captures keypresses, sends `IInputState` to server. Server relays. Remote `NetworkInputController` applies. Both `MovementController`s see identical input → identical physics → no teleport.
+
+### Architecture errors caught during these sessions
+
+Each of these became a behavioral rule or skill improvement:
+
+- AI derived input by reverse-engineering velocity. Correction: input state travels on the wire directly.
+- AI collapsed `NetworkInputController` into a mode on `InputController`. Correction: two separate classes, same interface.
+- AI used pure event-driven input (`_UnhandledInput` only). Correction: Godot docs recommend hybrid polling + events.
+- AI added `FaceDirection.None`. Correction: a character always faces left or right. No null direction.
+- AI proposed `PlayerIntention` middleware for part 1. Correction: too many layers — move to Futures, keep the slot open.
+
+### Arthur's code rules (became `.editorconfig` + agent memory)
+
+After PR #42 merged with scope creep and AI slop, Arthur did a cleanup pass and established non-negotiable rules:
+
+- Full descriptive variable names — `velocity` not `vel`
+- Braces on all control flow
+- Switch expressions over chained if/else
+- `[Export]` node references instead of `GetNode<T>("path")`
+- No `#pragma warning disable` — fix the root cause
+- No AI attribution anywhere in KervanaLLC repos
+
+These rules became Brigid's `feedback_code_style.md` memory (`.editorconfig` at ERROR, no pragmas, OCD-level style matching) and `feedback_repo_push_rules.md` (never push/commit/PR to KervanaLLC).
+
+### Implementation learnings (became skills)
+
+From the `learnings.md` log in `matt-dev-cm`:
+
+| Discovery | Where it went |
+|-----------|--------------|
+| `BackgroundService` pattern — override `ExecuteAsync` only, let `OperationCanceledException` propagate | `dotnet-gameserver-hosting` skill |
+| Object pool `Rent/Remit` is for deserialization path only; server write path allocates freely at low frequency | `crystal-magica-architecture` skill |
+| `Color` record struct: positional constructor defaults A=255 (correct), object initializer defaults A=0 (transparent) | `numerical-pitfalls` skill |
+| `[Tool]` attribute doesn't propagate through inheritance; guard runtime code with `!Engine.IsEditorHint()` | `gamedev-godot` skill |
+| C# 14 `field` keyword replaces manual backing fields — only worth using when setter has real logic | `dotnet-csharp` skill |
+| `GetSlideCollision()` per-player beats `Area3D` per-platform for platform detection | `gamedev-3d-platformer` skill |
+
+### The scope creep lesson
+
+From Arthur's Slack, documented verbatim in the handoff:
+
+> Arthur: "fix ONLY the remote player smoothness regression"
+>
+> Arthur: "Please solve it the one hour wrong way"
+>
+> Matt: "I again scope creeped"
+
+This became the `feedback_dont_defer_without_permission.md` memory and the "no scope creep" rule enforced across every session.
+
