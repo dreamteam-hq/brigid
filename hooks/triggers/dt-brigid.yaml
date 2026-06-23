@@ -1,0 +1,276 @@
+# UserPromptSubmit + session-lifecycle trigger map for dt-brigid
+#
+# Maps prompt-pattern regex → skills Brigid should load before responding.
+# Read by hooks/scripts/skill-dispatcher.sh on every user prompt. The
+# session_lifecycle: block is read by SessionStart / PreCompact / PostCompact
+# handlers.
+#
+# Pattern matching is case-insensitive. First matching rule wins; order
+# matters. Use word-boundary anchors (\b) on noun phrases to avoid substring
+# false positives.
+#
+# Each rule emits a system message of the form:
+#   "Brigid: <prompt class> detected. Load: <skill_a>, <skill_b>. <hint>."
+#
+# The dispatcher exits 0 (non-blocking) regardless. If no rule fires,
+# no message is emitted — the prompt proceeds unaffected.
+#
+# Spec: dreamteam-hq/docent:docs/specs/userpromptsubmit-skill-dispatcher.md
+# Spec: dreamteam-hq/docent:docs/specs/session-lifecycle-hooks.md
+# Pattern reference: dreamteam-hq/iris:docs/designs/wave-b-iris.md
+
+version: 1
+agent: dt-brigid
+
+# ──────────────────────────────────────────────────────────────────────
+# Session-lifecycle block — consumed by SessionStart / PreCompact /
+# PostCompact handlers. See dreamteam-hq/docent:docs/specs/session-lifecycle-hooks.md.
+# ──────────────────────────────────────────────────────────────────────
+session_lifecycle:
+  # Identity assertion — emitted on every session-lifecycle event.
+  identity: |
+    You are running as dt-brigid:brigid. You are the Godot 4.6 game developer
+    for the DreamTeams ecosystem. You forge game systems — scene trees, entity
+    architectures, multiplayer netcode, render pipelines. You think in nodes,
+    signals, and .NET patterns. You manage dev-cm repos: KervanaLLC/CrystalMagica
+    and KervanaLLC/ObservableGodot. Hard constraints: no AI artifacts in KervanaLLC
+    repos (branches + draft PRs only), ObservableGodot tier boundaries are
+    inviolable (C++ ↔ managed via C-ABI only), C# 14 / .NET 10 only (no
+    GDScript), use extension_api.4.6.1.json for API signatures, never modify
+    telemetry_abi.h without explicit user approval.
+
+  # First-reach skills — load before doing anything else.
+  first_reach:
+    - gamedev-godot
+    - dotnet-csharp
+    - dotnet-architecture
+
+  # Foundational-facts source — path inside the project repo, relative to cwd.
+  # If file is missing or marker is missing, fall back silently.
+  facts_source: CLAUDE.md
+  facts_marker: "## Foundational Facts (Non-Negotiable)"
+
+# ──────────────────────────────────────────────────────────────────────
+# omit: — explicit-load orphan declarations + parent suppression (MA-2).
+# ──────────────────────────────────────────────────────────────────────
+# Skills listed under orphan_skills: are intentionally not bound to a
+# UserPromptSubmit pattern. They are explicit-load only (voice guides,
+# standards, schemas, reference patterns). The Phase G audit treats these
+# as "described-only" rather than missing-trigger bugs.
+#
+# §86.3 COMPLIANCE: every skill listed here MUST NOT appear in rules[].skills
+# or session_lifecycle.first_reach. Verified 2026-06-22.
+omit:
+  rules: []
+  first_reach: []
+  orphan_skills:
+    # Voice + output standards — load when authoring responses or docs.
+    - brigid-voice
+    # .NET project hygiene — load when setting up a new project or editorconfig.
+    - dotnet-editorconfig
+    - dotnet-project-structure
+    # Scripting + toolchain — load when working on build scripts.
+    - dotnet-scripts
+    # Logging/observability — load when adding instrumentation.
+    - dotnet-logging
+    # MVVM backend patterns — load when wiring ViewModels.
+    - dotnet-mvvm-backend
+    # Source generators — load when authoring Roslyn generators.
+    - roslyn-analyzers
+    # Reactive patterns — load when wiring DynamicData or Rx.
+    - system-reactive-dynamicdata
+    # Blender / art pipeline — load when working on 3D asset import.
+    - gamedev-blender
+    # Level design patterns — load when authoring level content.
+    - gamedev-level-design
+    # Deployment — load when shipping builds.
+    - gamedev-deployment
+    # Procedural generation — load when authoring world-gen systems.
+    - procedural-generation-3d
+    # Numerical pitfalls — load when writing physics / precision-sensitive code.
+    - numerical-pitfalls
+
+# ──────────────────────────────────────────────────────────────────────
+# Rules — UserPromptSubmit pattern matching.
+# §86.3: no skill in rules[].skills may also be in orphan_skills or first_reach.
+# ──────────────────────────────────────────────────────────────────────
+rules:
+  # ──────────────────────────────────────────────────────────────────────
+  # Scene + node architecture — Brigid's most common prompt class.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: scene-architecture
+    pattern: '(?i)\b(scene|node|scene tree|node hierarchy|autoload|singleton|resource|packed scene)\b'
+    skills:
+      - godot-scene-patterns
+    hint: "Scene architecture: use godot-scene-patterns for node hierarchy conventions, packed scenes, and autoload placement."
+
+  - id: godot-signals
+    pattern: '(?i)\b(signal|emit|connect|disconnect|await signal|typed signal)\b'
+    skills:
+      - godot-signals-csharp
+    hint: "Signals in C#: godot-signals-csharp covers typed signals, async await patterns, and cross-scene wiring."
+
+  - id: gdextension
+    pattern: '(?i)\b(gdextension|gde|c\+\+|gdnative|extension_api|telemetry|observablegodot|c-abi)\b'
+    skills:
+      - godot-gdextension-csharp
+    hint: "GDExtension: use extension_api.4.6.1.json for signatures. C++ ↔ managed boundary is C-ABI only — never modify telemetry_abi.h without approval."
+
+  - id: input-system
+    pattern: '(?i)\b(input|input map|action|joypad|keyboard|mouse|touch|input event)\b'
+    skills:
+      - godot-input-system
+    hint: "Input handling: godot-input-system covers InputMap, action routing, joypad abstraction."
+
+  - id: godot-networking
+    pattern: '(?i)\b(custom network|low.?level network|enet|websocket|tcp|udp|packet|raw socket)\b'
+    skills:
+      - godot-networking-custom
+    hint: "Custom networking: use godot-networking-custom for raw socket / ENet / WebSocket patterns below the high-level multiplayer API."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Multiplayer + authority model.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: multiplayer
+    pattern: '(?i)\b(multiplayer|rpc|authority|server.?side|client.?side|synchronizer|replication|lag compensation|rollback|netcode)\b'
+    skills:
+      - gamedev-multiplayer
+    hint: "Multiplayer: gamedev-multiplayer covers RPC patterns, authority models, and state sync. Brigid's authority model is server-authoritative."
+
+  - id: server-architecture
+    pattern: '(?i)\b(dedicated server|relay server|lobby|matchmaking|headless|server.?auth)\b'
+    skills:
+      - gamedev-server-architecture
+    hint: "Server architecture: headless server setup, lobby/relay patterns, server-authoritative game loop."
+
+  - id: mmo-persistence
+    pattern: '(?i)\b(mmo|persistence|world state|zone|persistent|database|player data|save|load)\b'
+    skills:
+      - gamedev-mmo-persistence
+    hint: "MMO persistence: data models, zone state, player save/load, world persistence across sessions."
+
+  - id: mmo-zone
+    pattern: '(?i)\b(zone|zone architecture|zone transfer|sector|area transition)\b'
+    skills:
+      - mmo-zone-architecture
+    hint: "Zone architecture: spatial partitioning, zone transfer, cross-zone RPC patterns."
+
+  - id: action-relay
+    pattern: '(?i)\b(action relay|relay|action queue|action buffer|action validation)\b'
+    skills:
+      - mmo-action-relay
+    hint: "Action relay patterns: server-side validation, action buffering, relay topology."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Entity + ECS patterns.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ecs
+    pattern: '(?i)\b(ecs|entity component|component system|archetype|entity|world system)\b'
+    skills:
+      - gamedev-ecs
+    hint: "ECS patterns: Godot node-as-entity conventions, component composition, system execution order."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Platformer mechanics.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: platformer
+    pattern: '(?i)\b(platformer|jump|wall.?jump|coyote|dash|ledge|ground.?check|character.?body)\b'
+    skills:
+      - gamedev-2d-platformer
+    hint: "Platformer mechanics: CharacterBody2D patterns, coyote time, jump buffering, wall-jump."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # AI + NPC behavior.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: npc-ai
+    pattern: '(?i)\b(npc|pathfinding|navigation|state machine|behavior tree|fsm|ai agent|enemy ai)\b'
+    skills:
+      - gamedev-2d-ai
+    hint: "NPC AI: NavigationAgent2D, FSM patterns, behavior trees, pathfinding in Godot C#."
+
+  - id: ai-3d
+    pattern: '(?i)\b(3d ai|3d pathfinding|navigation mesh|navmesh|3d npc|3d enemy)\b'
+    skills:
+      - gamedev-3d-ai
+    hint: "3D AI: NavigationAgent3D, navmesh baking, 3D NPC patterns."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # 3D graphics + art pipeline.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: art-pipeline-3d
+    pattern: '(?i)\b(import|gltf|fbx|mesh|material|shader|pbr|lod|texture|3d model|3d art)\b'
+    skills:
+      - gamedev-3d-art-pipeline
+    hint: "3D art pipeline: GLTF import, material setup, LOD configuration, shader authoring."
+
+  - id: platformer-3d
+    pattern: '(?i)\b(3d platformer|3d jump|3d character|characterbody3d|3d movement)\b'
+    skills:
+      - gamedev-3d-platformer
+    hint: "3D platformer: CharacterBody3D movement, camera rigs, 3D jump/dash mechanics."
+
+  - id: godot-3d-ui
+    pattern: '(?i)\b(3d ui|hud|world.?space ui|subviewport|3d canvas|overlay)\b'
+    skills:
+      - gamedev-2d-ui
+    hint: "UI in 3D: SubViewport, CanvasLayer, world-space UI anchoring."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ObservableGodot + CrystalMagica architecture.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: observable-godot
+    pattern: '(?i)\b(observablegodot|observable|tier boundary|managed.?side|native.?side|gdext bridge)\b'
+    skills:
+      - observable-godot-architecture
+    hint: "ObservableGodot: tier boundaries, C-ABI bridge patterns, observable node lifecycles."
+
+  - id: game-economy
+    pattern: '(?i)\b(economy|currency|shop|item|inventory|loot|drop rate|balance|monetization)\b'
+    skills:
+      - game-economy-design
+    hint: "Economy design: currency systems, item tables, shop patterns, balance considerations."
+
+  # ──────────────────────────────────────────────────────────────────────
+  # .NET / C# patterns (not in first_reach — specialized).
+  # ──────────────────────────────────────────────────────────────────────
+  - id: dotnet-di
+    pattern: '(?i)\b(dependency injection|service locator|ioc|container|di container|addsingleton|addscoped)\b'
+    skills:
+      - dotnet-dependency-injection
+    hint: "DI in .NET 10: Microsoft.Extensions.DependencyInjection patterns, service lifetime rules."
+
+  - id: dotnet-error-handling
+    pattern: '(?i)\b(exception|error handling|result type|try.?catch|panic|resilience|retry|circuit breaker)\b'
+    skills:
+      - dotnet-error-handling
+    hint: "Error handling: Result<T> patterns, exception policy, resilience in .NET 10."
+
+  - id: dotnet-cross-platform
+    pattern: '(?i)\b(cross.?platform|linux|windows|macos|runtime identifier|rid|platform.?specific)\b'
+    skills:
+      - dotnet-cross-platform
+    hint: "Cross-platform .NET: RID targeting, conditional compilation, platform-specific paths."
+
+  - id: dotnet-testing
+    pattern: '(?i)\b(test|unit test|integration test|xunit|nunit|moq|mock|assertion|fixture|testcontainer)\b'
+    skills:
+      - dotnet-testing
+    hint: "Testing in .NET 10: xUnit patterns, Moq setup, TestContainers for integration tests."
+
+  - id: dotnet-gameserver-hosting
+    pattern: '(?i)\b(generic host|ihost|hosted service|worker service|background service|hosting)\b'
+    skills:
+      - dotnet-gameserver-hosting
+    hint: "Generic Host for game servers: IHostedService, BackgroundService, lifetime management."
+
+  - id: godot-mcp-tools
+    pattern: '(?i)\b(mcp|godot mcp|godot tools|scene tool|node tool|resource tool|godot.?mcp)\b'
+    skills:
+      - godot-dotnet-mcp
+    hint: "Godot MCP tools: scene inspection, node manipulation, resource creation via MCP workflow."
+
+  - id: crystal-magica
+    pattern: '(?i)\b(crystalmagica|crystal magica|monogame|game content|content pipeline|xnb)\b'
+    skills:
+      - crystal-magica-architecture
+    hint: "CrystalMagica: MonoGame/.NET 10 architecture, content pipeline, asset management. Note: no AI artifacts, branches + draft PRs only."
