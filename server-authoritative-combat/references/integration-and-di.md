@@ -4,7 +4,7 @@ Changes required to existing services and the client to integrate the combat sys
 Covers DI registration in `Program.cs`, `EnemyControllerService` additions,
 `MapHub` changes, and client-side integration.
 
-All patterns match existing CrystalMagica conventions: DI registration from `Program.cs`,
+All patterns match existing game project conventions: DI registration from `Program.cs`,
 primary constructors from `MapHub`, `CharacterData` model patterns from `Models/`,
 generated `ServerClient`/`GameClient` wrappers from the source generator cascade.
 

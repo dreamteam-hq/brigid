@@ -1,6 +1,6 @@
 # Advanced Patterns: Disposal, Error Handling, and Testing
 
-> These are **recommended patterns** — not yet implemented in CrystalMagica.
+> These are **recommended patterns** — not yet implemented in the game project.
 > The codebase currently uses `_ =` discard universally. The patterns here
 > represent best-practice guidance for when subscription lifecycle management
 > becomes more complex.
@@ -9,7 +9,7 @@
 
 ### Current State: `_ =` Discard
 
-CrystalMagica's codebase uses the simplest disposal strategy — discard the `IDisposable` returned by `Subscribe()`:
+This project's codebase uses the simplest disposal strategy — discard the `IDisposable` returned by `Subscribe()`:
 
 ```csharp
 _ = viewModel.Position.Subscribe(x => Position = x.ToGodot3D());
@@ -195,7 +195,7 @@ This is analogous to Angular's `takeUntilDestroyed` or RxJava's `autoDispose` pa
 
 ## Error Handling in Pipelines
 
-> **Recommended guidance** — CrystalMagica currently has no error handling in Rx
+> **Recommended guidance** — this project currently has no error handling in Rx
 > pipelines. No `Catch`, `Retry`, or `onError` handlers are used. The patterns
 > below represent best practices for production resilience.
 
@@ -326,7 +326,7 @@ _subscriptions.Add(
 
 ## Testing Rx Code
 
-> **Recommended approach** — no Rx tests currently exist in CrystalMagica.
+> **Recommended approach** — no Rx tests currently exist in the game project.
 > The patterns below show how to test reactive pipelines effectively.
 
 ### Synchronous Testing (No Scheduler Needed)

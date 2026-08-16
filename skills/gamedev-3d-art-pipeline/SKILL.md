@@ -87,9 +87,9 @@ Runtime mesh generation for terrain, VFX, and dynamic geometry.
 - Typical workflow: `SurfaceTool` builds geometry, commits to `ArrayMesh`, assigned to `MeshInstance3D.Mesh`.
 - For terrain: generate heightmap-based mesh, split into chunks, apply LOD per chunk.
 
-## CrystalMagica: Current Asset State and Pipeline Roadmap
+## Current Asset State and Pipeline Roadmap
 
-CrystalMagica is a **3D MMO platformer** (CharacterBody3D, Node3D, Vector3, 3D physics) with a sidescroller camera angle (2.5D gameplay). All engine APIs are 3D — MeshInstance3D and LOD3D apply directly.
+The game project is a **3D MMO platformer** (CharacterBody3D, Node3D, Vector3, 3D physics) with a sidescroller camera angle (2.5D gameplay). All engine APIs are 3D — MeshInstance3D and LOD3D apply directly.
 
 **Current placeholder meshes** — art is not yet in the game. All characters and enemies are represented by built-in primitive meshes:
 
@@ -109,7 +109,7 @@ This is intentional scaffolding. The primitive meshes allow the gameplay, physic
 
 ## Sprite3D for 2.5D Aesthetics
 
-If CrystalMagica adopts sprite art rendered in 3D space (common in 2.5D platformers like Dead Cells, Hollow Knight with 3D backgrounds), `Sprite3D` is the relevant node:
+If the project adopts sprite art rendered in 3D space (common in 2.5D platformers like Dead Cells, Hollow Knight with 3D backgrounds), `Sprite3D` is the relevant node:
 
 - `Sprite3D` renders a `Texture2D` as a billboard or fixed-orientation quad in 3D space
 - **Billboard mode** (`Billboard = Enabled`): sprite always faces the camera — good for VFX, hit numbers, health bars
@@ -136,7 +136,7 @@ Techniques for maintaining framerate with large 3D scenes.
 
 ## Anti-Patterns
 
-- **Swapping to 2D nodes for characters**: do not replace `CharacterBody3D` + `MeshInstance3D` with `CharacterBody2D` + `Sprite2D` to achieve a sidescroller look. CrystalMagica runs a 3D physics simulation — mixing 2D nodes breaks collision, physics layers, and the networking model.
+- **Swapping to 2D nodes for characters**: do not replace `CharacterBody3D` + `MeshInstance3D` with `CharacterBody2D` + `Sprite2D` to achieve a sidescroller look. The project runs a 3D physics simulation — mixing 2D nodes breaks collision, physics layers, and the networking model.
 - **Editing `.import` files manually**: these are generated metadata. Any manual edits are overwritten on reimport. Change settings only via the Godot Import dock.
 - **Forgetting to apply transforms in Blender**: unapplied scale/rotation on meshes causes mismatched transforms in Godot. Always `Ctrl+A` > All Transforms before glTF export.
 - **Skipping LOD on MMO entities**: without LOD, per-frame GPU cost scales linearly with visible entity count. In an MMO with dozens of players and enemies on screen, this is a guaranteed performance cliff.

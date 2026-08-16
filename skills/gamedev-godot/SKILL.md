@@ -17,16 +17,16 @@ version: "1.0.0"
 
 # Godot 4.6 Development (C#)
 
-Godot 4.6 with C# (.NET 10) is the client stack for CrystalMagica. This skill covers project structure, script conventions, scene lifecycle, the MCP workflow for scene inspection, and common pitfalls. Never GDScript. Never GodotObject without a reason.
+Godot 4.6 with C# (.NET 10) is the client stack for the game project. This skill covers project structure, script conventions, scene lifecycle, the MCP workflow for scene inspection, and common pitfalls. Never GDScript. Never GodotObject without a reason.
 
 ## Project Structure
 
 A Godot C# project always has a `.csproj` at the repo root (or in the Godot project folder) alongside the `project.godot` file. Scripts are `.cs` files; scenes are `.tscn` files; reusable data types are `.tres` resource files.
 
 ```
-CrystalMagica.Game/
+GameProject.Game/
 ├── project.godot           # Godot project settings, autoloads, input map
-├── CrystalMagica.Game.csproj
+├── GameProject.Game.csproj
 ├── scenes/
 │   ├── main.tscn           # Root scene (entry point)
 │   ├── player/
@@ -126,7 +126,7 @@ public override void _Ready()
 }
 ```
 
-**Disabling process loops.** Nodes call `SetProcess(false)` / `SetPhysicsProcess(false)` to pause their loop without removing them from the tree. CrystalMagica uses this in `_Ready` to keep nodes inert until `Bind()` provides required data, eliminating null guards in the hot loop.
+**Disabling process loops.** Nodes call `SetProcess(false)` / `SetPhysicsProcess(false)` to pause their loop without removing them from the tree. The game project uses this in `_Ready` to keep nodes inert until `Bind()` provides required data, eliminating null guards in the hot loop.
 
 ## MCP Server Workflow
 
@@ -226,4 +226,3 @@ public override void _Process(double delta)
 | `godot-input-system` | `InputMap`, action-based input, input buffer, multiplayer input routing |
 | `godot-networking-custom` | Custom binary WebSocket protocol, client-side netcode |
 | `observable-godot-architecture` | MVVM pattern, Rx/DynamicData bindings in Godot nodes |
-| `crystal-magica-architecture` | CrystalMagica-specific MVVM types: `PlayerNode`, `RemotePlayerNode`, `IBindable` |

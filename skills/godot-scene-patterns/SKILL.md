@@ -58,7 +58,7 @@ This means in `_Ready()`, you can safely reference child nodes. You **cannot** s
 
 **Deferred calls:** `CallDeferred("MethodName")` and `SetDeferred("property", value)` queue execution for the end of the current frame's idle processing. Use this to avoid modifying the tree mid-iteration (e.g., freeing nodes inside `_Process`).
 
-**CrystalMagica pattern — deferred activation:**
+**This project's pattern — deferred activation:**
 
 ```csharp
 public override void _Ready()

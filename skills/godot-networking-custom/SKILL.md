@@ -13,7 +13,7 @@ category: gamedev
 version: "1.0.0"
 ---
 
-# Custom Networking for Godot 4.6 C# (CrystalMagica Pattern)
+# Custom Networking for Godot 4.6 C# (Reference Pattern)
 
 This is NOT Godot's built-in MultiplayerAPI. No MCP servers.
 

@@ -7,7 +7,7 @@ Celtic triple goddess of craft, smithwork, and inspiration. Brigid forges game s
 ## Install
 
 ```bash
-cd ~/gh/me/dev-cm
+cd ~/gh/me/your-game-project
 bash ~/gh/dreamteam-hq/brigid/scripts/install.sh
 ```
 
@@ -16,7 +16,7 @@ Or use `deploy.sh` with a `deploy.yaml` for full project loadout (Brigid + Iris 
 ## Agent
 
 ```bash
-claude --agent dt-brigid:brigid --project ~/gh/me/dev-cm
+claude --agent dt-brigid:brigid --project ~/gh/me/your-game-project
 ```
 
 ## Brain

@@ -2,7 +2,7 @@
 # install.sh — install Brigid game dev agent into a project
 #
 # Usage:
-#   cd ~/gh/me/dev-cm
+#   cd ~/gh/me/your-game-project
 #   bash ~/gh/dreamteam-hq/brigid/scripts/install.sh
 #
 #   # With brain prefix for project-scoped databases:

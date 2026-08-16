@@ -51,7 +51,7 @@ irrelevant body
 ## Foundational Facts (Non-Negotiable)
 
 - ObservableGodot tier boundaries are inviolable — C++ ↔ managed via C-ABI only.
-- No AI artifacts in KervanaLLC repos — branches + draft PRs only, no pushing, no Co-Authored-By.
+- C# 14 / .NET 10 only — no GDScript in new code.
 - Use extension_api.4.6.1.json for API signatures, not docs or memory.
 
 ## Trailing heading

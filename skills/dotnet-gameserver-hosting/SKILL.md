@@ -21,7 +21,7 @@ Domain knowledge for .NET Generic Host patterns specific to headless game server
 
 Use `WebApplication.CreateBuilder()` + `AddHostedService<T>()` for background game logic. WebSocket endpoint handles client connections. Wire everything through DI.
 
-**CrystalMagica pattern:** `MapHub` as singleton (owns all map state), `SocketHandler` as singleton (manages WebSocket connections), `BackgroundService` subclasses drive server-controlled entities (patrols, spawns, world ticks).
+**This project's pattern:** `MapHub` as singleton (owns all map state), `SocketHandler` as singleton (manages WebSocket connections), `BackgroundService` subclasses drive server-controlled entities (patrols, spawns, world ticks).
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -56,7 +56,7 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 - `AddHostedService` for background loops — started/stopped by the host
 - Inject via constructor
 
-**CrystalMagica:** `MapHub` registered as both concrete type and `IMapHub` interface for shared instance.
+**This project:** `MapHub` registered as both concrete type and `IMapHub` interface for shared instance.
 
 ```csharp
 builder.Services.AddSingleton<MapHub>();
@@ -91,7 +91,7 @@ lifetime.ApplicationStopping.Register(() =>
 
 ## 7. Configuration
 
-`appsettings.json` for tuning (tick rate, max players, patrol parameters). `IOptions<T>` pattern. Environment variable overrides for containers. CrystalMagica today: all consts in code — move to config when there is more than one tunable per concern.
+`appsettings.json` for tuning (tick rate, max players, patrol parameters). `IOptions<T>` pattern. Environment variable overrides for containers. This project today: all consts in code — move to config when there is more than one tunable per concern.
 
 ```json
 { "GameServer": { "TickRateMs": 100, "MaxPlayers": 50, "PatrolSpeedMultiplier": 1.0 } }

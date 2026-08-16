@@ -106,7 +106,7 @@ Enemy (CharacterBody3D)                 layer=5 (Enemy)
 
 ## Hitbox Shape Sizing (2.5D)
 
-All hitbox/hurtbox shapes must use Z-depth = 4.0 to match CrystalMagica's collision convention:
+All hitbox/hurtbox shapes must use Z-depth = 4.0 to match the game project's collision convention:
 
 ```csharp
 // Player melee hitbox -- box extending in attack direction

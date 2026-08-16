@@ -21,7 +21,7 @@ version: "1.0.0"
 
 - All movement through `Velocity` property + `MoveAndSlide()` in `_PhysicsProcess(double delta)`.
 - `IsOnFloor()`, `IsOnWall()`, `IsOnCeiling()` reflect the result of the most recent `MoveAndSlide()` — typically read at the start of the next `_PhysicsProcess` frame, before the current frame's `MoveAndSlide()`.
-- Apply gravity each frame: `velocityBeforePhysics.Y -= gravity * (float)delta` where `gravity` is a positive value (CrystalMagica default: `22f`).
+- Apply gravity each frame: `velocityBeforePhysics.Y -= gravity * (float)delta` where `gravity` is a positive value (this project's default: `22f`).
 - Horizontal movement: set `Velocity.X` from input direction * speed.
 - **Sidescroller constraint**: if Z drift occurs, clamp with `Position = Position with { Z = 0f }` and `Velocity = Velocity with { Z = 0f }` each physics frame.
 - `UpDirection = Vector3.Up` (default) — required for `IsOnFloor()` to work.
@@ -60,7 +60,7 @@ CurrentState = (IsOnFloor(), moveInput != 0, Velocity.Y) switch
 ```
 
 - State drives animation selection, sound, and particle effects — never drives physics directly.
-- CrystalMagica pattern: physics is authoritative, state is derived, animation follows state.
+- This project's pattern: physics is authoritative, state is derived, animation follows state.
 
 ## Camera
 
@@ -73,7 +73,7 @@ CurrentState = (IsOnFloor(), moveInput != 0, Velocity.Y) switch
 ## Collision Layers
 
 - Godot uses 32 physics layers (1-indexed in editor, 0-indexed in code).
-- CrystalMagica layer assignment:
+- This project's layer assignment:
   - **Layer 1 — Environment**: static world geometry, tilemap colliders.
   - **Layer 2 — Player**: local player's `CharacterBody3D`.
   - **Layer 3 — PlayerHurtbox**: `Area3D` receiving damage.

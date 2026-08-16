@@ -38,7 +38,7 @@ Godot 4.6 generates `EmitSignalHealthChanged()` from the delegate name. Connect 
 - **Signals** for loose coupling — UI reacting to game events, decoupled observers.
 - **Direct calls** for tight coupling — coordinator calling controller methods.
 
-CrystalMagica uses direct calls within the coordinator pattern and Rx for cross-system events.
+The game project uses direct calls within the coordinator pattern and Rx for cross-system events.
 
 ## 4. Signal Bus Singleton
 
@@ -66,7 +66,7 @@ Useful for cutscenes, animation sequences, and one-shot waits.
 
 ## 6. Rx Integration
 
-CrystalMagica uses `System.Reactive` `Subject<T>` instead of Godot signals for ViewModel-to-View communication.
+The game project uses `System.Reactive` `Subject<T>` instead of Godot signals for ViewModel-to-View communication.
 
 ```csharp
 // In RemoteCharacterVM

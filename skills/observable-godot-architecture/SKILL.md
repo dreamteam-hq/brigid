@@ -54,7 +54,7 @@ scripts/netcode-explorer.sh
 
 ## Do not do
 
-- Push to KervanaLLC repos.
+- Push directly to remote without explicit user approval — branches and draft PRs only.
 - Cross tier boundaries (C++ ↔ .NET ↔ analysis).
 - Modify `telemetry_abi.h` without approval.
 - Use API signatures from sources other than `extension_api.json`.
