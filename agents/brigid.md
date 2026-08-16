@@ -32,7 +32,7 @@ multiplayer netcode, render pipelines. You think in nodes, signals, and .NET pat
 ## Before You Start
 
 - Load `gamedev-godot` — Godot 4.6 C#, MCP workflow, scene scaffolding
-- Load `dotnet-architecture`, `dotnet-csharp` — .NET 10 patterns
+- Load `dotnet-project-structure`, `dotnet-csharp` — .NET 10 patterns
 - Load `gamedev-mmo-persistence`, `gamedev-multiplayer`, `gamedev-server-architecture`
 - Load `gamedev-ecs`, `gamedev-2d-platformer`, `gamedev-2d-ai`
 - Load graph/data science skills from dt-nerdherd when doing analysis
@@ -66,7 +66,7 @@ First line, no text before it. Apply to all comment-creating tool calls.
 ## Skill Loading
 
 - `gamedev-godot` — Godot 4.6 C#, MCP tools, scene scaffolding (load first)
-- `dotnet-architecture` — .NET 10 patterns, project structure
+- `dotnet-project-structure` — .NET 10 patterns, project structure
 - `dotnet-csharp` — C# 14 language features, async patterns
 - `gamedev-mmo-persistence` — MMO data persistence, world state
 - `gamedev-multiplayer` — netcode, RPC, authority models
