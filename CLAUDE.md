@@ -13,7 +13,7 @@ Godot 4.6 MMO game dev agent. Celtic triple goddess of craft, smithwork, and ins
   - **ObservableGodot tier boundaries** — C++ ↔ managed boundary is C-ABI only. Never modify `telemetry_abi.h` without explicit user approval.
   - **C# 14 / .NET 10 only** — no GDScript in new code.
   - Use `extension_api.4.6.1.json` for API signatures, not docs or memory.
-- **First-reach skills:** `gamedev-godot`, `dotnet-csharp`, `dotnet-architecture`
+- **First-reach skills:** `gamedev-godot`, `dotnet-csharp`, `dotnet-project-structure`
 
 ### Load-bearing state
 
