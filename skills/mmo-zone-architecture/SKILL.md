@@ -15,11 +15,11 @@ version: "1.0.0"
 
 # MMO Zone Architecture
 
-Zone architecture determines how a persistent world is partitioned across servers, how players move between partitions, and how the server selects which entities each player needs to see. This skill covers the full progression from CrystalMagica's current single-zone model through AoI filtering, instancing, and cross-zone communication — all grounded in ASP.NET patterns.
+Zone architecture determines how a persistent world is partitioned across servers, how players move between partitions, and how the server selects which entities each player needs to see. This skill covers the full progression from the game project's current single-zone model through AoI filtering, instancing, and cross-zone communication — all grounded in ASP.NET patterns.
 
 ## Current State: Single-Zone MapHub
 
-CrystalMagica today runs one `MapHub` that holds all connected players in a single `ConcurrentDictionary<Guid, ConnectedUser>`. Every action is broadcast to everyone. This is correct and simple up to roughly 50-100 concurrent players. No partitioning code exists yet — the progression below is additive.
+The game project today runs one `MapHub` that holds all connected players in a single `ConcurrentDictionary<Guid, ConnectedUser>`. Every action is broadcast to everyone. This is correct and simple up to roughly 50-100 concurrent players. No partitioning code exists yet — the progression below is additive.
 
 ```csharp
 // Current broadcast pattern in MapHub
@@ -40,7 +40,7 @@ This O(n) fan-out is fine at low player counts. The upgrade path is to replace t
 
 **Seamless handoff** — the player's entity exists briefly in both zones during crossing. Requires an overlap region, state transfer between zone servers, and coordinated despawn/spawn messages to nearby players. Use only when the player experience demands it (open-world map transitions). The complexity cost is high.
 
-For CrystalMagica, start with loading screen transitions. Seamless handoff comes only with the open world feature.
+For this project, start with loading screen transitions. Seamless handoff comes only with the open world feature.
 
 ### Handoff Protocol (Loading Screen)
 
@@ -237,7 +237,7 @@ public sealed class ChatService
 
 When zone servers are separate processes, use a message bus (Redis Pub/Sub, NATS, or RabbitMQ). Each zone server subscribes to topics for global chat, party channels (keyed by party ID), and guild channels. The publishing server posts the message to the bus; all subscribers fan out to their local `ConnectedUsers`.
 
-For CrystalMagica, implement single-server routing first. The message bus path adds an infrastructure dependency that is only justified when zone servers are actually separated.
+For this project, implement single-server routing first. The message bus path adds an infrastructure dependency that is only justified when zone servers are actually separated.
 
 ## Anti-Patterns
 
@@ -257,6 +257,5 @@ For CrystalMagica, implement single-server routing first. The message bus path a
 |-------|-------------|
 | `mmo-action-relay` | Action relay model, broadcast patterns, combat networking |
 | `gamedev-server-architecture` | Tick rate, binary protocol, `Channel<T>` usage |
-| `crystal-magica-architecture` | `MapHub`, `ConnectedUser`, wire types in the live codebase |
 | `gamedev-mmo-persistence` | Persisting character state across zone transitions |
 | `gamedev-multiplayer` | Client-side zone transition handling in Godot |

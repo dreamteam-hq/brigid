@@ -134,7 +134,7 @@ will cause a visible frame hitch.
 
 ## PROPOSED FOR LOOP 4 — MVVM Integration
 
-> The types and patterns below do NOT exist in CrystalMagica today. They show how
+> The types and patterns below do NOT exist in the game project today. They show how
 > damage numbers would integrate with the MVVM architecture once health/damage systems
 > are implemented.
 
@@ -172,6 +172,6 @@ target.Value.DamageEvents.OnNext(new DamageEvent(amount, isCrit));
 ### Proposed Types
 
 ```csharp
-// PROPOSED: new type — does not exist in CrystalMagica today
+// PROPOSED: new type — does not exist in the game project today
 public record DamageEvent(int Amount, bool IsCrit);
 ```

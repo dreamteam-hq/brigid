@@ -25,13 +25,13 @@ version: "1.0.0"
 
 # System.Reactive and DynamicData for .NET 10 Game Clients
 
-## MVVM in CrystalMagica
+## MVVM in This Project
 
-CrystalMagica uses MVVM as a backend architecture pattern for its Godot 4.6 game client. This is NOT WPF/MAUI MVVM.
+This project uses MVVM as a backend architecture pattern for its Godot 4.6 game client. This is NOT WPF/MAUI MVVM.
 
-- **Models** live in the shared `CrystalMagica` library (`CrystalMagica.Models`). These are wire types like `CharacterData`, `CharacterAction`, and `MoveBegin` used by both client and server.
-- **ViewModels** live in `CrystalMagica.Game/ViewModels/`. They are client-side only and driven by System.Reactive. `MainViewModel`, `RemoteCharacterVM`, `LocalPlayerCharacterVM`.
-- **Views** are Godot nodes in `CrystalMagica.Game/Views/`. `PlayerNode` (base CharacterBody3D), `RemotePlayerNode`, `ItemsNode`.
+- **Models** live in the shared `GameProject` library (`GameProject.Models`). These are wire types like `CharacterData`, `CharacterAction`, and `MoveBegin` used by both client and server.
+- **ViewModels** live in `GameProject.Game/ViewModels/`. They are client-side only and driven by System.Reactive. `MainViewModel`, `RemoteCharacterVM`, `LocalPlayerCharacterVM`.
+- **Views** are Godot nodes in `GameProject.Game/Views/`. `PlayerNode` (base CharacterBody3D), `RemotePlayerNode`, `ItemsNode`.
 - The server has no ViewModels. MapHub owns models directly.
 
 ### LocalPlayerCharacterVM vs RemoteCharacterVM
@@ -48,7 +48,7 @@ Three subject types serve distinct roles. Choosing the wrong one produces subtle
 |------|:-:|:-:|---------|
 | `Subject<T>` | No | No | Discrete events: network messages, input actions |
 | `BehaviorSubject<T>` | Yes (read-only) | Last value | State that always has a current value |
-| `ValueSubject<T>` | Yes (read/write) | Last value | CrystalMagica wrapper over `BehaviorSubject<T>` with get/set `.Value` |
+| `ValueSubject<T>` | Yes (read/write) | Last value | This project's wrapper over `BehaviorSubject<T>` with get/set `.Value` |
 
 ### Subject\<T\> — Event Streams
 
@@ -78,7 +78,7 @@ _ = viewModel.Updates.Subscribe(x =>
 Wraps `BehaviorSubject<T>`. Setting `.Value` calls `OnNext()` internally. Implements `ISubject<T>`, so it is both an observable and an observer.
 
 ```csharp
-// CrystalMagica.Reactive.ValueSubject<T>
+// GameProject.Reactive.ValueSubject<T>
 public class ValueSubject<T> : ISubject<T>
 {
     private BehaviorSubject<T> subject;
@@ -460,7 +460,7 @@ Always pass an `onError` handler to `Subscribe`. Without it, an error silently k
 
 ## Testing Rx Code
 
-> **Recommended approach** — no Rx tests currently exist in CrystalMagica.
+> **Recommended approach** — no Rx tests currently exist in the game project.
 > Use `Microsoft.Reactive.Testing.TestScheduler` for deterministic time. Subscribe
 > synchronously and assert immediately — `StartWith` and `Subject.OnNext` emit inline.
 > For examples, see [references/advanced-patterns.md](references/advanced-patterns.md).

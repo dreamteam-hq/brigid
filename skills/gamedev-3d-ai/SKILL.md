@@ -18,7 +18,7 @@ version: "1.0.0"
 
 ## Server-Controlled Entities
 
-CrystalMagica pattern: `EnemyControllerService` inherits from `BackgroundService` and runs all patrol/combat logic server-side. The service broadcasts `CharacterAction` messages to every connected client via the existing action relay. Clients never run AI logic — they only render what the server tells them. The server is the single source of truth for enemy position, state, and behavior.
+This project's pattern: `EnemyControllerService` inherits from `BackgroundService` and runs all patrol/combat logic server-side. The service broadcasts `CharacterAction` messages to every connected client via the existing action relay. Clients never run AI logic — they only render what the server tells them. The server is the single source of truth for enemy position, state, and behavior.
 
 Key points:
 - One `BackgroundService` per enemy type or zone manages a pool of entities
@@ -95,7 +95,7 @@ All AI decisions are made server-side. Clients are pure renderers for enemy enti
 
 ## NavigationServer3D
 
-CrystalMagica uses **3D physics and 3D navigation** — CharacterBody3D, Vector3, 3D collision layers. The sidescroller feel (2.5D) is a gameplay constraint, not an engine constraint. NavigationServer3D is the correct pathfinding system.
+The game project uses **3D physics and 3D navigation** — CharacterBody3D, Vector3, 3D collision layers. The sidescroller feel (2.5D) is a gameplay constraint, not an engine constraint. NavigationServer3D is the correct pathfinding system.
 
 Godot's built-in server-side pathfinding for 3D environments:
 
@@ -112,7 +112,7 @@ Godot 4.6 API (not deprecated 4.0 patterns):
 
 ## 2.5D AI Considerations
 
-CrystalMagica is a sidescroller rendered in 3D space. Enemy AI must respect this constraint:
+The game project is a sidescroller rendered in 3D space. Enemy AI must respect this constraint:
 
 - **Constrain Z axis movement**: patrol waypoints and chase targets should stay on the level's Z plane. Clamp or project enemy Z position to the lane's Z coordinate each tick.
 - **Aggro radius as 2D circle**: compute aggro/leash checks using only X and Y distance (`Vector3` with Z ignored, or project to `Vector2`). A full 3D sphere check would incorrectly include enemies/players on different Z layers (e.g., background lanes).
@@ -120,7 +120,7 @@ CrystalMagica is a sidescroller rendered in 3D space. Enemy AI must respect this
 - **NavMesh baking**: bake nav meshes as thin slabs on the lane Z plane. This prevents the 3D navmesh from routing enemies through Z depth when it shouldn't.
 - **Lane-switching enemies**: if future design adds Z-depth lane changes, those transitions are explicit state machine transitions (`ChangeLane` action), not free 3D movement.
 
-## CrystalMagica: EnemyControllerService Integration
+## EnemyControllerService Integration
 
 The `EnemyControllerService` (inherits `BackgroundService`) is the concrete implementation of all patterns above:
 

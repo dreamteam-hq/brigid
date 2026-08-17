@@ -1,7 +1,7 @@
 ---
 name: server-authoritative-combat
 description: >
-  Server-side combat resolution for CrystalMagica -- hitbox validation, damage computation,
+  Server-side combat resolution for the game project -- hitbox validation, damage computation,
   attack deduplication, and continuous collision for melee attacks. Covers the transition from
   pure relay to authoritative game logic: new hub methods, BackgroundService tick loop for
   active attacks, thread-safe state sharing between AttackService and EnemyControllerService,
@@ -27,11 +27,11 @@ version: "0.2.0"
 
 # Server-Authoritative Combat
 
-How the CrystalMagica server transitions from pure relay to authoritative combat logic. The
+How the game project's server transitions from pure relay to authoritative combat logic. The
 server receives attack **intent**, computes hitbox overlaps, resolves damage, deduplicates per
 activation, and broadcasts results. Clients never report damage.
 
-This skill is grounded in the actual CrystalMagica codebase as of Loop 2. Every pattern shown
+This skill is grounded in the actual game project codebase as of Loop 2. Every pattern shown
 here extends existing code rather than inventing parallel abstractions.
 
 ## Quick Reference
@@ -73,11 +73,11 @@ Client                         Server                          Other Clients
 
 | Type | Project | Purpose |
 |---|---|---|
-| `AttackIntent` | `CrystalMagica/Models` | Wire model: `AttackerId`, `Position`, `Direction`, `AttackType`. Partial class for source-gen serialization. |
-| `AttackType` | `CrystalMagica/Models` | Enum: `MeleeSwing` (extensible per weapon) |
-| `EnemyHealth` | `CrystalMagica/Models` | Wire model: `EnemyId`, `CurrentHp`, `MaxHp`, `AttackerId`. Partial class. |
-| `ActiveAttack` | `CrystalMagica.Server/Services` | Server-only: hitbox AABB, tick born/expires, `HitEnemies` dedup set |
-| `AttackService` | `CrystalMagica.Server/Services` | `BackgroundService` -- tick loop, overlap, damage broadcast |
+| `AttackIntent` | `GameProject/Models` | Wire model: `AttackerId`, `Position`, `Direction`, `AttackType`. Partial class for source-gen serialization. |
+| `AttackType` | `GameProject/Models` | Enum: `MeleeSwing` (extensible per weapon) |
+| `EnemyHealth` | `GameProject/Models` | Wire model: `EnemyId`, `CurrentHp`, `MaxHp`, `AttackerId`. Partial class. |
+| `ActiveAttack` | `GameProject.Server/Services` | Server-only: hitbox AABB, tick born/expires, `HitEnemies` dedup set |
+| `AttackService` | `GameProject.Server/Services` | `BackgroundService` -- tick loop, overlap, damage broadcast |
 
 ---
 
@@ -89,7 +89,7 @@ wrappers, and message types automatically.
 
 ### Step 1: Add to Client Hub Interfaces
 
-**Client -> Server** (`CrystalMagica/ClientHubs/Server/IMapHub.cs`):
+**Client -> Server** (`GameProject/ClientHubs/Server/IMapHub.cs`):
 ```csharp
 // Existing methods:
 //   Task JoinRequest();
@@ -98,7 +98,7 @@ wrappers, and message types automatically.
 public Task PerformAttack(AttackIntent intent);
 ```
 
-**Server -> Client** (`CrystalMagica/ClientHubs/Game/IMapHub.cs`):
+**Server -> Client** (`GameProject/ClientHubs/Game/IMapHub.cs`):
 ```csharp
 // Existing methods:
 //   void JoinMapResponse(JoinMapResponse mapResponse);
@@ -172,7 +172,7 @@ public class MapHub(SocketLogger socketLogger, AttackService attackService) : IM
 
 ## Shared Models
 
-Follow existing conventions: partial classes in `CrystalMagica/Models/`, `System.Numerics.Vector2`
+Follow existing conventions: partial classes in `GameProject/Models/`, `System.Numerics.Vector2`
 for positions, `FaceDirection` enum for direction. The `partial` keyword triggers
 `ModelSerializationGenerator` to emit `Serialize`/`Deserialize`.
 
@@ -180,7 +180,7 @@ for positions, `FaceDirection` enum for direction. The `partial` keyword trigger
 // AttackIntent.cs
 using System.Numerics;
 
-namespace CrystalMagica.Models
+namespace GameProject.Models
 {
     public enum AttackType { MeleeSwing }
 
@@ -194,7 +194,7 @@ namespace CrystalMagica.Models
 }
 
 // EnemyHealth.cs
-namespace CrystalMagica.Models
+namespace GameProject.Models
 {
     public partial class EnemyHealth
     {
@@ -271,7 +271,7 @@ enemies that walk into an active swing are never hit.
 - `ProcessActiveAttacks()`: snapshot enemies once per tick, iterate attacks x enemies,
   dedup check, overlap test, apply damage, broadcast `EnemyHealthUpdated` / `EnemyDied`.
 
-DI registration follows the CrystalMagica pattern (singleton + hosted service so the service
+DI registration follows the game project's pattern (singleton + hosted service so the service
 can be injected into `MapHub` while also having its `ExecuteAsync` driven by the host):
 ```csharp
 // In Program.cs, alongside existing registrations:
@@ -432,14 +432,14 @@ architectural change. For > 100 enemies in a zone, add spatial hashing to the br
 ## Implementation Checklist
 
 ### Server -- Models and Interfaces
-1. Create `AttackType` enum and `AttackIntent` partial class in `CrystalMagica/Models/`
-2. Create `EnemyHealth` partial class in `CrystalMagica/Models/`
+1. Create `AttackType` enum and `AttackIntent` partial class in `GameProject/Models/`
+2. Create `EnemyHealth` partial class in `GameProject/Models/`
 3. Add `PerformAttack` to `ClientHubs/Server/IMapHub.cs`
 4. Add `EnemyHealthUpdated`, `EnemyDied` to `ClientHubs/Game/IMapHub.cs`
 5. Build solution -- verify source generators produce expected types
 
 ### Server -- Services
-6. Create `ActiveAttack` in `CrystalMagica.Server/Services/`
+6. Create `ActiveAttack` in `GameProject.Server/Services/`
 7. Add `EnemyState`, `GetEnemySnapshot()`, `ApplyDamage()` to `EnemyControllerService`
 8. Create `AttackService` with tick loop, registration, overlap, broadcast
 9. Update `MapHub` with `PerformAttack` implementation
@@ -475,4 +475,3 @@ architectural change. For > 100 enemies in a zone, add spatial hashing to the br
 | `gamedev-multiplayer` | Client-side prediction, entity interpolation, lag compensation theory |
 | `gamedev-server-architecture` | BackgroundService tick loops, GC tuning, thread architecture |
 | `dotnet-gameserver-hosting` | DI registration, WebSocket hosting, graceful shutdown |
-| `crystal-magica-architecture` | Source generator cascade, hub interfaces, MVVM pattern |

@@ -43,7 +43,7 @@ For attack hitbox enable/disable patterns, see `references/attack-hitbox-pattern
 
 A collision occurs when **A's mask overlaps B's layer** OR **B's mask overlaps A's layer**.
 
-### CrystalMagica Collision Layers
+### Reference Collision Layers
 
 From `project.godot` -- active assignments:
 
@@ -197,7 +197,7 @@ Every collision-aware node needs at least one CollisionShape3D child.
 
 ### 2.5D Sizing Convention
 
-CrystalMagica is 2.5D: gameplay on X/Y plane, Z is depth only. All collision shapes must span the full Z-depth so objects always overlap along Z.
+The game project is 2.5D: gameplay on X/Y plane, Z is depth only. All collision shapes must span the full Z-depth so objects always overlap along Z.
 
 ```csharp
 // Platform collision -- matches Main.tscn convention
@@ -317,7 +317,7 @@ Hitboxes detect hurtboxes, not body layers. This keeps combat detection independ
 
 ## CharacterBody3D + MoveAndSlide
 
-CrystalMagica's `PlayerNode` extends `CharacterBody3D`. The physics loop:
+The game project's `PlayerNode` extends `CharacterBody3D`. The physics loop:
 
 ```csharp
 public override void _PhysicsProcess(double delta)
@@ -339,7 +339,7 @@ Key rules:
 
 ## Gravity and Jump
 
-CrystalMagica pattern -- gravity applied every frame, jump adds upward velocity:
+This project's pattern -- gravity applied every frame, jump adds upward velocity:
 
 ```csharp
 // Gravity (in _PhysicsProcess)
@@ -378,7 +378,7 @@ For server-spawned physics objects (crates, barrels, destructibles):
 
 ## Multiplayer Physics
 
-CrystalMagica's approach:
+The game project's approach:
 
 1. **Local player** runs full input + physics (`LocalPlayerNode._PhysicsProcess` reads input, calls `Jump()`/`MoveBegin()`, then `base._PhysicsProcess()` which calls `MoveAndSlide()`).
 2. **Remote players** receive action messages (Jump, MoveBegin, Stop) and replay them through the same `PlayerNode` methods -- same `MoveAndSlide()` path yields approximately deterministic results.
@@ -471,11 +471,11 @@ public partial class PlayerNode : CharacterBody3D
 
 ## 2.5D Collision Constraints
 
-CrystalMagica uses 3D nodes but gameplay is on the X/Y plane. Z is visual depth only.
+The game project uses 3D nodes but gameplay is on the X/Y plane. Z is visual depth only.
 
 ### Rules
 
-1. All collision shapes must have sufficient Z-depth (4.0 in CrystalMagica) so objects always overlap along Z.
+1. All collision shapes must have sufficient Z-depth (4.0 in this project) so objects always overlap along Z.
 2. Player and enemy movement never changes Z position.
 3. Hitbox/hurtbox shapes use the same Z-depth as body collision shapes.
 4. RayCast3D and ShapeCast3D `TargetPosition` should have Z = 0.

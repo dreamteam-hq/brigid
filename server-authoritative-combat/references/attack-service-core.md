@@ -4,7 +4,7 @@ Full implementation patterns for the `AttackService` `BackgroundService`, includ
 hitbox math, attack registration, validation, tick loop, overlap processing, and
 broadcast helpers.
 
-All code grounded in actual CrystalMagica patterns: `BackgroundService` tick loop from
+All code grounded in actual game project patterns: `BackgroundService` tick loop from
 `EnemyControllerService`, broadcast pattern from `MapHub.RelayCharacterAction`,
 `ConcurrentDictionary` from `MapHub.ConnectedUsers`.
 
@@ -17,13 +17,13 @@ All code grounded in actual CrystalMagica patterns: `BackgroundService` tick loo
 
 ## HitboxMath (Static Helper)
 
-Pure math, no state. Place in `CrystalMagica.Server/Services/HitboxMath.cs`.
+Pure math, no state. Place in `GameProject.Server/Services/HitboxMath.cs`.
 
 ```csharp
 using System.Numerics;
-using CrystalMagica.Models;
+using GameProject.Models;
 
-namespace CrystalMagica.Server.Services;
+namespace GameProject.Server.Services;
 
 public static class HitboxMath
 {
@@ -84,10 +84,10 @@ hitbox. Replace with `throw new ArgumentOutOfRangeException()` when expanding.
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
-using CrystalMagica.Models;
-using CrystalMagica.Server.ReceiverHubs;
+using GameProject.Models;
+using GameProject.Server.ReceiverHubs;
 
-namespace CrystalMagica.Server.Services;
+namespace GameProject.Server.Services;
 
 public class AttackService(MapHub mapHub, EnemyControllerService enemyService)
     : BackgroundService

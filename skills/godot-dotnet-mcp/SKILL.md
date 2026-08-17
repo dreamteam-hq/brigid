@@ -55,7 +55,7 @@ An MCP server plugin running inside the Godot editor. Agents read live project s
 27. [Plugin Evolution Tools](#plugin-evolution-tools)
 28. [Plugin Developer Tools](#plugin-developer-tools)
 29. [Custom Tools](#custom-tools)
-30. [CrystalMagica Workflows](#crystalmagica-workflows)
+30. [Example Workflows](#example-workflows)
 31. [Anti-Patterns](#anti-patterns)
 
 ---
@@ -64,7 +64,7 @@ An MCP server plugin running inside the Godot editor. Agents read live project s
 
 ### Installation
 
-**Option 1 — Direct copy** (recommended for CrystalMagica):
+**Option 1 — Direct copy** (recommended for this project):
 Copy `addons/godot_dotnet_mcp/` into your project's `addons/` directory. Enable in Project > Project Settings > Plugins.
 
 **Option 2 — Git submodule**:
@@ -1131,11 +1131,11 @@ Use the [Plugin Evolution Tools](#plugin-evolution-tools) to scaffold, audit, an
 
 ---
 
-## CrystalMagica Workflows
+## Example Workflows
 
 ### Project Context
 
-CrystalMagica is a Godot 4.6.1 MMO 2D platformer using C# 14 / .NET 10. It follows MVVM: Views (nodes) bind to ViewModels via Rx. The `[Export]` attribute wires scene references.
+The example project below is a Godot 4.6.1 MMO 2D platformer using C# 14 / .NET 10. It follows MVVM: Views (nodes) bind to ViewModels via Rx. The `[Export]` attribute wires scene references.
 
 Key files:
 - `res://Scenes/Main.tscn` -- root scene with World, Player, RemoteCharacters, Enemies, HUD
@@ -1173,7 +1173,7 @@ Expected result:
 
 ### Workflow: Inspecting Collision Layers
 
-CrystalMagica uses collision layers to separate player vs enemy vs environment:
+The project uses collision layers to separate player vs enemy vs environment:
 
 ```
 1. node property  action="get"  path="Enemy"  property="collision_layer"
@@ -1218,7 +1218,7 @@ When the game throws errors during testing:
 
 ### Workflow: Loop Implementation Cycle
 
-During CrystalMagica development loops (e.g., Loop 02 -- Server Spawned Entity):
+During this project's development loops (e.g., Loop 02 -- Server Spawned Entity):
 
 ```
 1. intelligence project_state
@@ -1278,7 +1278,7 @@ To add a node to Main.tscn (e.g., adding the Enemies ItemsNode):
 
 2. **Direct .tscn file editing** -- When `scene_patch` exists, never edit `.tscn` text files directly. The patch tool handles Godot's internal ID tracking and resource references correctly.
 
-3. **Bypassing MVVM** -- CrystalMagica uses MVVM. When using `script edit_cs` to modify Views, do not add business logic. Views bind to ViewModels; ViewModels hold state. The `script_patch` tool should add bindings and subscriptions to Views, not game logic.
+3. **Bypassing MVVM** -- this project uses MVVM. When using `script edit_cs` to modify Views, do not add business logic. Views bind to ViewModels; ViewModels hold state. The `script_patch` tool should add bindings and subscriptions to Views, not game logic.
 
 4. **Skipping dry_run** -- Always use `dry_run: true` on `scene_patch` and `script_patch` before applying changes. This catches errors before they corrupt files.
 

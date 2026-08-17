@@ -1,6 +1,6 @@
 # Scene Integration — Current State vs Proposed Extensions
 
-This reference shows the actual CrystalMagica source files as they exist today, then
+This reference shows the actual game project source files as they exist today, then
 describes the proposed additions for health bar and damage number support.
 
 ## Current State (as of Loop 02)
@@ -39,14 +39,14 @@ Enemy (CharacterBody3D) — script: EnemyNode.cs
 ### EnemyNode.cs — Actual Implementation
 
 ```csharp
-using CrystalMagica.Game.Extensions;
+using GameProject.Game.Extensions;
 using System.Reactive.Linq;
 using Godot;
 using System;
-using CrystalMagica.Game.ViewModels;
-using CrystalMagica.Models;
+using GameProject.Game.ViewModels;
+using GameProject.Models;
 
-namespace CrystalMagica.Game.Views
+namespace GameProject.Game.Views
 {
 
     public partial class EnemyNode : PlayerNode, IBindable
@@ -111,10 +111,10 @@ using System;
 using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using CrystalMagica.Game.Extensions;
-using CrystalMagica.Models;
+using GameProject.Game.Extensions;
+using GameProject.Models;
 
-namespace CrystalMagica.Game.ViewModels
+namespace GameProject.Game.ViewModels
 {
     public class RemoteCharacterVM
     {
@@ -149,7 +149,7 @@ namespace CrystalMagica.Game.ViewModels
 
 ## PROPOSED FOR LOOP 4 — Health Bar Integration
 
-> Everything below describes additions that do NOT exist in CrystalMagica today.
+> Everything below describes additions that do NOT exist in the game project today.
 > These are design targets for when the health/damage system is implemented.
 
 ### Proposed Enemy.tscn Changes
@@ -220,7 +220,7 @@ HealthRatio = Updates
 ### Proposed New Types
 
 ```csharp
-// PROPOSED: new types — do not exist in CrystalMagica today
+// PROPOSED: new types — do not exist in the game project today
 
 // Health update message from server
 public record HealthUpdate(int CurrentHp, int MaxHp) : CharacterAction;

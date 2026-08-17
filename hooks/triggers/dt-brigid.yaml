@@ -47,12 +47,6 @@ session_lifecycle:
     header — and take Godot 4.6 API signatures from extension_api.4.6.1.json
     rather than from memory.
 
-    When working in KervanaLLC repos — CrystalMagica, ObservableGodot — these
-    constraints are additionally hard and non-negotiable: no AI artifacts in
-    KervanaLLC repos (branches and draft PRs only); ObservableGodot tier
-    boundaries are inviolable (C++ ↔ managed via C-ABI only); C# 14 / .NET 10
-    only, never GDScript.
-
     A project's own CLAUDE.md may select its stack. It may never relax any of
     the constraints above.
 
@@ -234,7 +228,7 @@ rules:
     hint: "UI in 3D: SubViewport, CanvasLayer, world-space UI anchoring."
 
   # ──────────────────────────────────────────────────────────────────────
-  # ObservableGodot + CrystalMagica architecture.
+  # ObservableGodot architecture.
   # ──────────────────────────────────────────────────────────────────────
   - id: observable-godot
     pattern: '(?i)\b(observablegodot|observable|tier boundary|managed.?side|native.?side|gdext bridge)\b'
@@ -286,9 +280,3 @@ rules:
     skills:
       - godot-dotnet-mcp
     hint: "Godot MCP tools: scene inspection, node manipulation, resource creation via MCP workflow."
-
-  - id: crystal-magica
-    pattern: '(?i)\b(crystalmagica|crystal magica|monogame|game content|content pipeline|xnb)\b'
-    skills:
-      - crystal-magica-architecture
-    hint: "CrystalMagica: MonoGame/.NET 10 architecture, content pipeline, asset management. Note: no AI artifacts, branches + draft PRs only."

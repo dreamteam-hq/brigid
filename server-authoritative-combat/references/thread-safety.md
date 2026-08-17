@@ -2,7 +2,7 @@
 
 Detailed thread safety analysis for shared state between `AttackService`,
 `EnemyControllerService`, and `MapHub`. Every mechanism described here maps to
-existing CrystalMagica patterns or standard .NET concurrent primitives.
+existing game project patterns or standard .NET concurrent primitives.
 
 ## Table of Contents
 

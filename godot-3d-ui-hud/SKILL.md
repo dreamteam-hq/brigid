@@ -4,7 +4,7 @@ description: >
   3D HUD elements in Godot 4.6 C# — shader-quad health bars (default for enemies),
   SubViewport bars (player/boss only), floating damage numbers with Label3D + object pool,
   nameplates, billboard modes, and LOD strategy for MMO-scale entity counts.
-  Grounded in CrystalMagica MVVM (EnemyNode, RemoteCharacterVM, IBindable).
+  Grounded in this project's MVVM (EnemyNode, RemoteCharacterVM, IBindable).
 triggers:
   - health bar
   - damage numbers
@@ -97,7 +97,7 @@ _ = viewModel.HealthRatio.Subscribe(ratio =>
 });
 ```
 
-For the full integration with CrystalMagica's MVVM architecture — including the actual
+For the full integration with this project's MVVM architecture — including the actual
 current state of `EnemyNode.cs`, `RemoteCharacterVM.cs`, and `Enemy.tscn`, plus the
 proposed extensions — read `references/scene-integration.md`.
 

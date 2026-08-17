@@ -62,7 +62,7 @@ Each `InputEvent` flows through the focused viewport:
 
 UI `Control` nodes process between `_Input` and `_UnhandledKeyInput`. A focused `LineEdit` swallows keystrokes before `_UnhandledInput` sees them. Gameplay input belongs in `_UnhandledInput`.
 
-## CrystalMagica Pattern
+## Reference Pattern
 
 Decouple input capture from movement via an interface:
 

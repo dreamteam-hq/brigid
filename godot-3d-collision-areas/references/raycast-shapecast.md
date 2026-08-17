@@ -177,7 +177,7 @@ attackSweep.ForceShapecastUpdate();
 
 ## 2.5D Constraints for Raycasts
 
-In CrystalMagica (2.5D), all raycasts and shapecasts should have Z = 0 in their `TargetPosition`:
+In this project (2.5D), all raycasts and shapecasts should have Z = 0 in their `TargetPosition`:
 
 ```csharp
 // GOOD -- stays in X/Y plane

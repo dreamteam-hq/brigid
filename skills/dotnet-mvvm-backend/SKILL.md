@@ -18,13 +18,13 @@ version: "1.0.0"
 
 # .NET MVVM Backend Architecture
 
-## MVVM in CrystalMagica
+## MVVM in This Project
 
-CrystalMagica uses MVVM as a backend architecture pattern for its Godot 4.6 game client. This is NOT WPF/MAUI MVVM.
+This project uses MVVM as a backend architecture pattern for its Godot 4.6 game client. This is NOT WPF/MAUI MVVM.
 
-- **Models** live in the shared `CrystalMagica` library (`CrystalMagica.Models`). These are wire types like `CharacterData`, `CharacterAction`, and `MoveBegin` used by both client and server.
-- **ViewModels** live in `CrystalMagica.Game/ViewModels/`. They are client-side only and driven by System.Reactive. `MainViewModel`, `RemoteCharacterVM`, `LocalPlayerCharacterVM`.
-- **Views** are Godot nodes in `CrystalMagica.Game/Views/`. `PlayerNode` (base CharacterBody3D), `RemotePlayerNode`, `ItemsNode`.
+- **Models** live in the shared `GameProject` library (`GameProject.Models`). These are wire types like `CharacterData`, `CharacterAction`, and `MoveBegin` used by both client and server.
+- **ViewModels** live in `GameProject.Game/ViewModels/`. They are client-side only and driven by System.Reactive. `MainViewModel`, `RemoteCharacterVM`, `LocalPlayerCharacterVM`.
+- **Views** are Godot nodes in `GameProject.Game/Views/`. `PlayerNode` (base CharacterBody3D), `RemotePlayerNode`, `ItemsNode`.
 - The server has no ViewModels. MapHub owns models directly.
 
 ## System.Reactive Patterns
