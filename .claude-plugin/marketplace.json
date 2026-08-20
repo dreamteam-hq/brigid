@@ -1,5 +1,6 @@
 {
   "name": "dreamteam-hq-brigid",
+  "description": "Game dev plugin for DreamTeams — Godot 4.6 scene architecture, .NET/C# gameplay code, MMO netcode and server systems",
   "owner": { "name": "Matt Young" },
   "plugins": [
     {
