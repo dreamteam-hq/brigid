@@ -1,5 +1,6 @@
 {
   "name": "dreamteam-hq-brigid",
+  "description": "Brigid — Godot 4.6 game development agent for the DreamTeams ecosystem: scene architecture, MMO platformer systems, multiplayer netcode, and ECS patterns in .NET/C#.",
   "owner": { "name": "Matt Young" },
   "plugins": [
     {
